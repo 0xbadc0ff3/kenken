@@ -1,4 +1,6 @@
-package com.programming.board;
+package com.programming.model;
+
+import java.util.Objects;
 
 public final class Cell {
     private final int i,j;
@@ -19,5 +21,18 @@ public final class Cell {
     }
     public int getValue(){
         return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cell cell = (Cell) o;
+        return i == cell.i && j == cell.j;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(i, j);
     }
 }
