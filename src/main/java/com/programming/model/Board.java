@@ -62,6 +62,20 @@ public class Board {
         public boolean contains(Cell cell){
             return block.contains(cell);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AttachedBlock attachedBlock = (AttachedBlock) o;
+            return Objects.equals(block, attachedBlock.block);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(block);
+        }
+
         @Override
         public int getCurrentSize(){
             return block.getCurrentSize();
@@ -112,6 +126,13 @@ public class Board {
         AttachedBlock attachedBlock = new AttachedBlock(block);
         blocchi.add( attachedBlock );
         return attachedBlock;
+    }
+    public void removeBlock(Block block){
+        if(blocchi.remove(block)){
+            if(initializationStatus) initializationStatus=false;
+
+        }
+
     }
     public boolean checkSolution(){
         if(!initializationStatus) return false;

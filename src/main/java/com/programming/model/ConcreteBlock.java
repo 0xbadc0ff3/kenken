@@ -4,6 +4,7 @@ import com.programming.Utility;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Objects;
 
 public class ConcreteBlock implements Block {
     protected Collection<Cell> celle;
@@ -106,6 +107,19 @@ public class ConcreteBlock implements Block {
         LinkedList<Cell> toReturn = new LinkedList<>();
         for(Cell cell: celle) toReturn.add(cell);
         return toReturn;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConcreteBlock concreteBlock = (ConcreteBlock) o;
+        return vincolo == concreteBlock.vincolo && Objects.equals(celle, concreteBlock.celle) && op == concreteBlock.op;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(celle, vincolo, op);
     }
 
     @Override
