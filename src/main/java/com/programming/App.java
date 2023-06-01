@@ -27,6 +27,7 @@ public class App
 
         JFrame finestra = new JFrame("KenKen");
         BoardView board = new BoardView(5);
+        finestra.setIconImage(new ImageIcon("src/main/java/com/programming/logo.png").getImage());
 
 
         finestra.setSize(900,900);

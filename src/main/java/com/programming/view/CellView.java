@@ -19,11 +19,13 @@ public class CellView {
     private JPanel panel;
     private JTextField textField;
     private Block block;
+    private BoardView boardView;
     private int top, left, bottom, right;
     private JPopupMenu menu;
     private final int N;
-    public CellView(Cell cell, int n){
-        this.N = n;
+    public CellView(Cell cell, BoardView boardView){
+        this.boardView = boardView;
+        this.N = boardView.getN();
         this.block=null;
         this.cell = cell;
         this.panel = new JPanel(new BorderLayout());
@@ -36,6 +38,7 @@ public class CellView {
         //Pattern FACTORY METHOD di Java.
         panel.setBorder(BorderFactory.createMatteBorder(top,left,bottom,right,Color.BLACK));
         panel.add(textField,BorderLayout.CENTER);
+        /*
         menu = new JPopupMenu("Scegli un valore.");
         for(int i=1; i<=N; i++){
             JMenuItem menuItem = new JMenuItem(""+i);
@@ -59,6 +62,8 @@ public class CellView {
         }
         this.textField.setComponentPopupMenu(menu);
         this.panel.setVisible(true); //Evita che il click ai bordi della cella vengano intercettati dal JPopupMenu del textField
+
+         */
     }
     public Component getView(){
         return panel;
@@ -111,5 +116,8 @@ public class CellView {
     }
     public Cell getCell(){
         return cell;
+    }
+    public void setMenu(JPopupMenu menu){
+        this.menu = menu;
     }
 }

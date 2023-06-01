@@ -18,6 +18,7 @@ public class Board {
         @Override
         public void add(Cell cell){
             if(!Board.this.notInBlocco.contains(cell)) throw new RuntimeException("Cella già appartenente ad un blocco.");
+            assert Board.this.state==BoardState.PLAYING;
             /*
             if(cell.getRow()<0 || cell.getRow() >= Board.this.N) throw new RuntimeException("Indice riga non valido.");
             if(cell.getCol()<0 || cell.getCol() >= Board.this.N) throw new RuntimeException("Indice colonna non valido.");
@@ -30,10 +31,11 @@ public class Board {
         }
         @Override
         public boolean remove(Cell cell){
+            if( Board.this.state==BoardState.PLAYING ) throw new RuntimeException("Impossibile modificare la board durante la partita");
             boolean status = block.remove(cell);
-            if(status){//Si potrebbe evitare l'if.
+            if(status){
                 Board.this.notInBlocco.add(cell);
-                if(Board.this.initializationStatus) Board.this.initializationStatus =false;
+                Board.this.initializationStatus=false;
             }
             return status;
             //TODO?
@@ -41,11 +43,13 @@ public class Board {
 
         @Override
         public void setVincolo(int vincolo) {
+            if( Board.this.state==BoardState.PLAYING ) throw new RuntimeException("Impossibile modificare la board durante la partita");
             block.setVincolo(vincolo);
         }
 
         @Override
         public void setOperation(Operation operation) {
+            if( Board.this.state==BoardState.PLAYING ) throw new RuntimeException("Impossibile modificare la board durante la partita");
             block.setOperation(operation);
         }
 
@@ -98,18 +102,37 @@ public class Board {
 
         @Override
         public Iterator<Cell> iterator() {
-            return block.iterator();
+            return new BlockIterator();
+        }
+        private class BlockIterator implements Iterator<Cell>{//Voglio bloccare l'operazione di Remove.
+        private Iterator<Cell> iterator = block.iterator();
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public Cell next() {
+                return iterator.next();
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Rimozione tramite iteratore non supportata.");
+            }
         }
     }
     private final int N;
+    private BoardState state;
     private Cell[][] celle;
     private Collection<AttachedBlock> blocchi;
-    private boolean initializationStatus = false;
+    private boolean initializationStatus = false;//indica se ogni cella appartiene ad un blocco. (corrisponde ad notInBlocco.size()==0)
     private Set<Cell> notInBlocco;
 
     public Board(int n){
         if(n<3) throw new IllegalArgumentException("Board troppo piccola.");
         this.N = n;
+        this.state = BoardState.SETTING;
         celle = new Cell[N][N];
         blocchi = new LinkedList<AttachedBlock>();
         notInBlocco = new HashSet<Cell>();
@@ -122,20 +145,22 @@ public class Board {
     }
 
     public Block attachBlock(Block block){//PATTERN DECORATOR
-        if(initializationStatus) throw new RuntimeException("Impossibile creare un nuovo blocco.");
+        if(initializationStatus || state==BoardState.PLAYING) throw new RuntimeException("Impossibile creare un nuovo blocco.");
         AttachedBlock attachedBlock = new AttachedBlock(block);
         blocchi.add( attachedBlock );
+        for(Cell cell: attachedBlock) notInBlocco.remove(cell);
+        initializationStatus = notInBlocco.isEmpty();
         return attachedBlock;
     }
     public void removeBlock(Block block){
+        if(state==BoardState.PLAYING) throw new RuntimeException("Impossibile modificare la board durante la partita.");
         if(blocchi.remove(block)){
-            if(initializationStatus) initializationStatus=false;
-
+            initializationStatus=false;
+            for(Cell cell: block) notInBlocco.add(cell);
         }
-
     }
     public boolean checkSolution(){
-        if(!initializationStatus) return false;
+        if(state!=BoardState.PLAYING) return false;
         for(Block b: blocchi)
             if(!b.isValid()) return false;
         return true;
@@ -151,7 +176,7 @@ public class Board {
     public Cell getCell(int i, int j){
         return celle[i][j];
     }
-    public Collection<Cell> getNotInBlockCells(){
+    /*public Collection<Cell> getNotInBlockCells(){
         return notInBlocco;
     }
     /*
@@ -161,6 +186,33 @@ public class Board {
     */
     public int getN(){
         return N;
+    }
+
+    private boolean isReadyToPlay(){
+        if(!initializationStatus) return false;
+        for(Block block: blocchi){
+            if(!block.hasConstraints()) return false;
+        }
+        return true;
+    }
+    public boolean startGame(){
+        if(!isReadyToPlay()) return false;
+        this.state=BoardState.PLAYING;
+        return true;
+    }
+    public void edit(){
+        this.state = BoardState.SETTING;
+    }
+    public void editWithFieldReset(){
+        this.state = BoardState.SETTING;
+        for(int i=0; i<N; i++){
+            for(int j=0; j<N; j++){
+                celle[i][j].setValue(0);
+            }
+        }
+    }
+    public BoardState getState(){
+        return state;
     }
 
 }

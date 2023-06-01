@@ -1,13 +1,14 @@
 package com.programming.view;
 
 import com.programming.model.Board;
+import com.programming.model.Cell;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class BoardView extends JPanel{
+public final class BoardView extends JPanel{
     private Board board;
     private Collection<BlockView> blockViews;
     private Collection<CellView> cellViews;
@@ -32,7 +33,7 @@ public class BoardView extends JPanel{
          */
         for(int i=0;i<board.getN();i++){
             for(int j=0;j<board.getN();j++){
-                CellView current = new CellView(board.getCell(i,j), board.getN());
+                CellView current = new CellView(board.getCell(i,j), this);
                 cellViews.add(current);
                 this.add(current.getView());
             }
@@ -50,5 +51,11 @@ public class BoardView extends JPanel{
 
     public Collection<CellView> getCellViews(){
         return cellViews;
+    }
+    public int getN() { return board.getN(); }
+    JPopupMenu createMenu(CellView cellView){
+        JPopupMenu menu = new JPopupMenu("Action to perform:");
+        if()
+        return menu;
     }
 }
