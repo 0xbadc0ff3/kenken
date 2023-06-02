@@ -1,5 +1,6 @@
 package com.programming;
 
+import com.programming.controller.KenkenController;
 import com.programming.model.Cell;
 import com.programming.view.BlockView;
 import com.programming.view.BoardView;
@@ -26,11 +27,16 @@ public class App
         JFrame.setDefaultLookAndFeelDecorated(true);
 
         JFrame finestra = new JFrame("KenKen");
-        BoardView board = new BoardView(5);
+        //BoardView board = new BoardView(5);
         finestra.setIconImage(new ImageIcon("src/main/java/com/programming/logo.png").getImage());
 
 
         finestra.setSize(900,900);
+
+
+        KenkenController controller = new KenkenController(5);
+        finestra.add(controller.getBoardView());
+        /*
         BlockView nuovo = board.createBlock();
         Collection<CellView> cellViews = board.getCellViews();
         Cell uno = new Cell(0,0);
@@ -46,7 +52,8 @@ public class App
         nuovo.addCell(uno1); nuovo.addCell(due2); nuovo.addCell(tre3);
         uno1.setValue(1);
         due2.setValue(2);
-        finestra.add(board);
+         */
+        //finestra.add(board);
         finestra.setVisible(true);
         finestra.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }

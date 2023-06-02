@@ -3,6 +3,7 @@ package com.programming.view;
 import com.programming.Utility;
 import com.programming.model.Block;
 import com.programming.model.Cell;
+import com.programming.model.Operation;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -17,10 +18,13 @@ import static com.programming.Utility.DEFAULT_BORDER_SIZE;
 public class CellView {
     private Cell cell;
     private JPanel panel;
-    private JTextField textField;
-    private Block block;
+    private JTextField textField, constraints;
+    private BlockView block;
     private BoardView boardView;
     private int top, left, bottom, right;
+    private Operation operation = null;
+    private Integer result = null;
+    private boolean hasConstraints = false;
     private JPopupMenu menu;
     private final int N;
     public CellView(Cell cell, BoardView boardView){
@@ -33,51 +37,27 @@ public class CellView {
         textField = new JTextField("",1);
         textField.setEditable(false);
         textField.setHorizontalAlignment(JTextField.CENTER);
+        textField.getCaret().setVisible(false);
         //Inizializzo la grafica supponendo che, inizialmente, non appartenga ad alcun blocco.
         top = DEFAULT_BORDER_SIZE; left = DEFAULT_BORDER_SIZE; bottom = DEFAULT_BORDER_SIZE; right = DEFAULT_BORDER_SIZE;
         //Pattern FACTORY METHOD di Java.
         panel.setBorder(BorderFactory.createMatteBorder(top,left,bottom,right,Color.BLACK));
         panel.add(textField,BorderLayout.CENTER);
-        /*
-        menu = new JPopupMenu("Scegli un valore.");
-        for(int i=1; i<=N; i++){
-            JMenuItem menuItem = new JMenuItem(""+i);
-            menuItem.setActionCommand(""+i);
-            menuItem.addActionListener(
-                    new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            try{
-                                int choosed = Integer.parseInt(e.getActionCommand());
-                                if(choosed<1 || choosed>N) throw new RuntimeException("Numero scelto non valido.");//ridondante
-                                setValue(choosed);
-                            }catch(NumberFormatException numberFormatException){
-                                System.out.println("Errore nella selezione del numero.");
-                                numberFormatException.printStackTrace();
-                            }
-                        }
-                    }
-            );
-            menu.add(menuItem);
-        }
-        this.textField.setComponentPopupMenu(menu);
-        this.panel.setVisible(true); //Evita che il click ai bordi della cella vengano intercettati dal JPopupMenu del textField
-
-         */
     }
     public Component getView(){
         return panel;
     }
-    public void addBlock(Block block){
+    public void addBlock(BlockView block){
         if(this.block!=null) throw new RuntimeException("Cella già inserita in un blocco.");
         this.block=block;
+        //this.setMenu(boardView.createMenu(this));//TODO: REMOVE
         //updateView();
     }
     public void removeBlock(){
         this.block=null;
-        updateView();
+        updateView(false);
     }
-    public void updateView(){
+    public void updateView(boolean isSelected){
         if(block==null) {
             top = DEFAULT_BORDER_SIZE;
             left = DEFAULT_BORDER_SIZE;
@@ -105,8 +85,8 @@ public class CellView {
         toCheck = new Cell(i,j+1);
         if(block.contains(toCheck)) right=DEFAULT_BORDER_SIZE;
         else right=BLOCK_BORDER_SIZE;
-
-        panel.setBorder(BorderFactory.createMatteBorder(top,left,bottom,right,Color.BLACK));
+        Color color = isSelected? Color.CYAN : Color.BLACK;
+        panel.setBorder(BorderFactory.createMatteBorder(top,left,bottom,right,color));
     }
     public void setValue(int value){
         //Assumo input valido
@@ -119,5 +99,62 @@ public class CellView {
     }
     public void setMenu(JPopupMenu menu){
         this.menu = menu;
+        this.textField.setComponentPopupMenu(menu);
+    }
+    public boolean hasBlock(){
+        return block!=null;
+    }
+    public BlockView getBlock() { return block; }
+    public boolean hasConstraints(){ return hasConstraints; }
+    public void addConstraints(){
+        this.result=block.getResult(); this.operation=block.getOperation();
+        if(!hasConstraints){
+            hasConstraints = true;
+            constraints = new JTextField();
+            constraints.getCaret().setVisible(false);//Non funzionante?
+            constraints.setEditable(false);
+            this.panel.add(constraints, BorderLayout.NORTH);
+            constraints.setVisible(true);
+            this.panel.updateUI();
+        }
+        StringBuilder toDisplay = new StringBuilder(5);
+        if(result != null && result>0) toDisplay.append(result);
+        if(operation!=null) {
+            switch (operation) {
+                case ADD:
+                    toDisplay.append("+");
+                    break;
+                case SUB:
+                    toDisplay.append("-");
+                    break;
+                case MUL:
+                    toDisplay.append("x");
+                    break;
+                case DIV:
+                    toDisplay.append("/");
+                    break;
+            }
+        }
+        constraints.setText(toDisplay.toString());
+    }
+    /*
+    public void addConstraints(int result){
+        this.result=result;
+        addConstraints(result, this.operation);
+    }
+    public void addConstraints(Operation operation){
+        this.operation = operation;
+        System.out.println(this.result);
+        addConstraints(this.result,operation);
+    }*/
+    //public Operation getOperationConstraint(){ return operation; }
+    //public Integer getResultConstraint(){ return result; }
+    public void removeConstraints(){
+        if(!hasConstraints) return;
+        hasConstraints = false;
+        this.operation = null;
+        this.result = null;
+        this.panel.remove(constraints);
+        constraints = null;
     }
 }

@@ -96,8 +96,13 @@ public class Board {
         }
 
         @Override
+        public boolean isFull() {
+            return block.isFull();
+        }
+
+        @Override
         public Collection<Cell> getCells() {
-            return block.getCells();
+            return Collections.unmodifiableCollection(block.getCells());
         }
 
         @Override
@@ -167,17 +172,13 @@ public class Board {
     }
 
     public Collection<Block> getBlocks(){
-        Collection<Block> blocks = new LinkedList<>();
-        for(AttachedBlock attachedBlock: blocchi){
-            blocks.add(attachedBlock);
-        }
-        return blocks;
+        return Collections.unmodifiableCollection(blocchi);
     }
     public Cell getCell(int i, int j){
         return celle[i][j];
     }
-    /*public Collection<Cell> getNotInBlockCells(){
-        return notInBlocco;
+    public Collection<Cell> getNotInBlockCells(){
+        return Collections.unmodifiableCollection(notInBlocco);
     }
     /*
     public void setCell(Cell cell){

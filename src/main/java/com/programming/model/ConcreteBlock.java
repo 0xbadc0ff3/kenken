@@ -103,6 +103,11 @@ public class ConcreteBlock implements Block {
     }
 
     @Override
+    public boolean isFull() {
+        return celle.size()==Utility.MAX_BLOCK_SIZE;
+    }
+
+    @Override
     public Collection<Cell> getCells() {
         LinkedList<Cell> toReturn = new LinkedList<>();
         for(Cell cell: celle) toReturn.add(cell);
