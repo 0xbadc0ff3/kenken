@@ -1,16 +1,11 @@
 package com.programming.view;
 
 import com.programming.Utility;
-import com.programming.model.Block;
 import com.programming.model.Cell;
 import com.programming.model.Operation;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.MatteBorder;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.PrinterException;
 
 import static com.programming.Utility.BLOCK_BORDER_SIZE;
 import static com.programming.Utility.DEFAULT_BORDER_SIZE;
@@ -20,21 +15,24 @@ public class CellView {
     private JPanel panel;
     private JTextField textField, constraints;
     private BlockView block;
-    private BoardView boardView;
+    //private BoardView boardView;
     private int top, left, bottom, right;
     private Operation operation = null;
     private Integer result = null;
     private boolean hasConstraints = false;
+    private CellState state = CellState.UNKOWN;
     private JPopupMenu menu;
-    private final int N;
-    public CellView(Cell cell, BoardView boardView){
-        this.boardView = boardView;
-        this.N = boardView.getN();
+    //private final int N;
+    public CellView(Cell cell){
+        //this.boardView = boardView;
+        //this.N = boardView.getN();
         this.block=null;
         this.cell = cell;
         this.panel = new JPanel(new BorderLayout());
         //Assumo valore iniziale della cella pari a zero
         textField = new JTextField("",1);
+        textField.setFont(Utility.FONT);
+        if(cell.getValue()>0) textField.setText(""+cell.getValue());
         textField.setEditable(false);
         textField.setHorizontalAlignment(JTextField.CENTER);
         textField.getCaret().setVisible(false);
@@ -56,6 +54,19 @@ public class CellView {
     public void removeBlock(){
         this.block=null;
         updateView(false);
+    }
+    public void removeValue(){
+        this.cell.setValue(0);
+        textField.setText("");
+    }
+    public int getValue(){
+        return cell.getValue();
+    }
+    public int getRow() {
+        return cell.getRow();
+    }
+    public int getCol(){
+        return cell.getCol();
     }
     public void updateView(boolean isSelected){
         if(block==null) {
@@ -136,6 +147,15 @@ public class CellView {
             }
         }
         constraints.setText(toDisplay.toString());
+    }
+    public void setState(CellState state){
+        this.state=state;
+        switch (state){
+            case VALID: this.textField.setForeground(Utility.VALID_COLOR); break;
+            case NOT_VALID: this.textField.setForeground(Utility.WARNING_COLOR); break;
+            case UNKOWN: this.textField.setForeground(Utility.DEFAULT_COLOR); break;
+            default: System.out.println("Stato sconosciuto: "+state); this.state=CellState.UNKOWN; break;
+        }
     }
     /*
     public void addConstraints(int result){

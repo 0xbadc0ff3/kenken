@@ -101,7 +101,8 @@ public class ConcreteBlock implements Block {
     public boolean hasConstraints() {
         return this.vincolo>0 && (this.op!=null || this.getCurrentSize()==1);
     }
-
+    public boolean hasResult() { return vincolo > 0; }
+    public boolean hasOperation() { return this.op!=null; }
     @Override
     public boolean isFull() {
         return celle.size()==Utility.MAX_BLOCK_SIZE;
@@ -112,6 +113,11 @@ public class ConcreteBlock implements Block {
         LinkedList<Cell> toReturn = new LinkedList<>();
         for(Cell cell: celle) toReturn.add(cell);
         return toReturn;
+    }
+
+    @Override
+    public boolean isAttached() {
+        return false;
     }
 
     @Override

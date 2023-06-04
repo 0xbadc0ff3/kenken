@@ -1,5 +1,9 @@
 package com.programming.model;
 
+import com.programming.Utility;
+
+import javax.swing.*;
+import java.io.*;
 import java.util.*;
 
 public class Board {
@@ -17,7 +21,7 @@ public class Board {
         }
         @Override
         public void add(Cell cell){
-            if(!Board.this.notInBlocco.contains(cell)) throw new RuntimeException("Cella già appartenente ad un blocco.");
+            if(!Board.this.notInBlocco.contains(cell)) throw new RuntimeException("Cella "+cell.getRow()+" "+cell.getCol()+" già appartenente ad un blocco.");
             assert Board.this.state==BoardState.PLAYING;
             /*
             if(cell.getRow()<0 || cell.getRow() >= Board.this.N) throw new RuntimeException("Indice riga non valido.");
@@ -106,6 +110,11 @@ public class Board {
         }
 
         @Override
+        public boolean isAttached() {
+            return true;
+        }
+
+        @Override
         public Iterator<Cell> iterator() {
             return new BlockIterator();
         }
@@ -136,6 +145,7 @@ public class Board {
 
     public Board(int n){
         if(n<3) throw new IllegalArgumentException("Board troppo piccola.");
+        if(n> Utility.MAX_BOARD_SIZE) throw new IllegalArgumentException("Board troppo grande");
         this.N = n;
         this.state = BoardState.SETTING;
         celle = new Cell[N][N];
@@ -165,6 +175,7 @@ public class Board {
         }
     }
     public boolean checkSolution(){
+        //TODO CONTROLLARE VALORI CELLE!!!!!
         if(state!=BoardState.PLAYING) return false;
         for(Block b: blocchi)
             if(!b.isValid()) return false;
@@ -180,15 +191,9 @@ public class Board {
     public Collection<Cell> getNotInBlockCells(){
         return Collections.unmodifiableCollection(notInBlocco);
     }
-    /*
-    public void setCell(Cell cell){
-        celle[cell.getRow()][cell.getCol()] = cell;
-    }
-    */
     public int getN(){
         return N;
     }
-
     private boolean isReadyToPlay(){
         if(!initializationStatus) return false;
         for(Block block: blocchi){
@@ -215,5 +220,141 @@ public class Board {
     public BoardState getState(){
         return state;
     }
+    public String toJSON(){
+        StringBuilder sb = new StringBuilder(200);
+        sb.append("{\"N\":"+N+",\"state\":"+(this.state==BoardState.SETTING?0:1));
+        if(this.state==BoardState.PLAYING){
+            sb.append(",values:[");
+            for(int i=0; i<N;i++)
+                for(int j=0; j<N; j++){
+                    sb.append(celle[i][j].getValue()+",");
+                }
+            sb.delete(sb.length()-1,sb.length());
+            sb.append("]");
+        }
+        sb.append(",\"blocks\":[");
+        Iterator<AttachedBlock> iterator = blocchi.iterator();
+        while(iterator.hasNext()){
+            Block block = iterator.next();
+            sb.append("{\"size\":"+block.getCurrentSize()+"," +"\"result\":"+block.getVincolo()+",\"operation\":\""+block.getOperation()+"\","+
+                    "\"cells\":[");
+            Iterator<Cell> it = block.iterator();
+            while(it.hasNext()){
+                Cell cell = it.next();
+                sb.append("{\"i\":"+cell.getRow()+",\"j\":"+cell.getCol()+"}");
+                if(it.hasNext()) sb.append(",");
+            }
+            sb.append("]}");
+            if(iterator.hasNext()) sb.append(",");
+        }
+        /*
+        sb.append("],\"notInBlock\":[");
+        Iterator<Cell> it = notInBlocco.iterator();
+        while(it.hasNext()){
+            Cell cell = it.next();
+            sb.append("{\"i\":"+cell.getRow()+",\"j\":"+cell.getCol()+"}");
+            if(it.hasNext()) sb.append(",");
+        }
+        */
+        sb.append("]}");
+        return sb.toString();
+    }
+    public static Board openBoard(File jsonFile) throws Exception{
+        if(!jsonFile.exists()) throw new FileNotFoundException();
+        BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
+        StringBuilder text = new StringBuilder(200);
+        String line;
+        while((line=reader.readLine()) != null){
+            text.append(line);
+        }
+        reader.close();
+        StringTokenizer stringTokenizer = new StringTokenizer(text.toString(),":\"\t\n{}[], ");
+        text=null;//libero memoria.
+        String currentToken = stringTokenizer.nextToken().strip();
+        System.out.println(currentToken);
+        if(!currentToken.equals("N")) throw new Exception("File not valid. Found "+currentToken+" instead of N");
+        currentToken = stringTokenizer.nextToken().strip();
+        Board opened = new Board(Integer.parseInt(currentToken));
+        currentToken = stringTokenizer.nextToken().strip();
+        if(!currentToken.equals("state")) throw new Exception("File not valid.");
+        currentToken = stringTokenizer.nextToken().strip();
+        int state = Integer.parseInt(currentToken);
+        if(state==0) {
+            opened.state=BoardState.SETTING;//ridondante
+        }
+        else if(state==1) {
+            currentToken = stringTokenizer.nextToken().strip();
+            if(!currentToken.equals("values")) throw new Exception("File not valid.");
+            for(int i=0; i<opened.N;i++){
+                for(int j=0; j<opened.N;j++){
+                    currentToken = stringTokenizer.nextToken().strip();
+                    opened.celle[i][j].setValue(Integer.parseInt(currentToken));
+                }
+            }
+        }
+        else throw new Exception("Unknown Board state.");
+        currentToken = stringTokenizer.nextToken().strip();
+        if(!currentToken.equals("blocks")) throw new Exception("File not valid.");
+        //currentToken = stringTokenizer.nextToken();
 
+        while(stringTokenizer.hasMoreTokens()){
+            //Un'iterazione equivale a leggere un blocco.
+            Block current = new ConcreteBlock();
+            currentToken = stringTokenizer.nextToken().strip();
+            if(!currentToken.equals("size")) throw new Exception("File not valid.");
+            currentToken = stringTokenizer.nextToken().strip();
+            int size = Integer.parseInt(currentToken);
+            currentToken = stringTokenizer.nextToken().strip();
+            if(!currentToken.equals("result")) throw new Exception("File not valid.");
+            currentToken = stringTokenizer.nextToken().strip();
+            int result =Integer.parseInt(currentToken);
+            if(result>0)current.setVincolo(result);
+            currentToken = stringTokenizer.nextToken().strip();
+            if(!currentToken.equals("operation")) throw new Exception("File not valid.");
+            currentToken = stringTokenizer.nextToken().strip().toUpperCase();
+            switch (currentToken){
+                case "ADD": current.setOperation(Operation.ADD); break;
+                case "SUB": current.setOperation(Operation.SUB); break;
+                case "MUL": current.setOperation(Operation.MUL); break;
+                case "DIV": current.setOperation(Operation.DIV); break;
+                case "NULL": break;
+                default: throw new Exception("Operation "+currentToken+" not valid");
+            }
+            currentToken = stringTokenizer.nextToken().strip();
+            if(!currentToken.equals("cells")) throw new Exception("File not valid.");
+            for(int a=0;a<size;a++){
+                int i,j;
+                currentToken = stringTokenizer.nextToken().strip();
+                if(!currentToken.equals("i")) throw new Exception("File not valid.");
+                currentToken = stringTokenizer.nextToken().strip();
+                i=Integer.parseInt(currentToken);
+                currentToken = stringTokenizer.nextToken().strip();
+                if(!currentToken.equals("j")) throw new Exception("File not valid.");
+                currentToken = stringTokenizer.nextToken().strip();
+                j=Integer.parseInt(currentToken);
+                current.add(opened.getCell(i,j));
+            }
+            opened.attachBlock(current);
+            //currentToken = stringTokenizer.nextToken().strip();//size se c'è un altro blocco, notInBlock altrimenti
+        }
+        if(state==1) opened.state=BoardState.PLAYING;
+        return opened;
+    }
+    public static void main(String... strings){
+        JFrame frame = new JFrame();
+
+        JFileChooser chooser = new JFileChooser();
+        //frame.add(chooser);
+        frame.setVisible(true);
+        //chooser.addActionListener(e -> {
+        //    if(e.)
+        //});
+        chooser.showOpenDialog(frame);
+        File file =chooser.getSelectedFile();
+        try{
+            openBoard(file);
+        }catch (Exception e){
+
+        }
+    }
 }

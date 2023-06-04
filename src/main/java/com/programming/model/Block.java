@@ -17,5 +17,6 @@ public interface Block extends Iterable<Cell> {
     boolean hasConstraints();
     boolean isFull();
     Collection<Cell> getCells();
+    boolean isAttached();
     default int getMaxBlockSize() { return Utility.MAX_BLOCK_SIZE; }//JAVA 8 o superiore.
 }

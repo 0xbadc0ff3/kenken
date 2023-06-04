@@ -6,7 +6,7 @@ import com.programming.model.*;
 import javax.swing.*;
 import java.util.*;
 
-public class BlockView {
+public class BlockView {//Proxy
     private Block block;
     private boolean selected = false;
     //private JPanel panel;
@@ -17,6 +17,19 @@ public class BlockView {
         this.block= new ConcreteBlock();
         this.block = board.attachBlock(this.block);
         cellViews = new LinkedList<>();
+    }
+    public BlockView(Board board, BoardView boardView, Block block){
+        if(!(block.isAttached() && board.getBlocks().contains(block))) throw new IllegalArgumentException("Block must be attached to the board.");
+        this.block = block;
+        cellViews = new LinkedList<>();
+        for(Cell cell: block){
+            cellViews.add(boardView.getCellView(cell));
+            boardView.getCellView(cell).addBlock(this);
+        }
+        for(CellView cw : cellViews){
+            cw.updateView(false);
+        }
+        updateDisplayCell(block.hasConstraints());
     }
     private void updateDisplayCell(boolean forceUpdate){
         Integer result = block.getVincolo(); Operation operation = block.getOperation();
@@ -36,7 +49,7 @@ public class BlockView {
                 min_j = cw.getCell().getCol();
             }
         }
-        if(forceUpdate){
+        if(forceUpdate /*|| result > 0 || operation != null*/){
             candidata.addConstraints();
         }
         this.displayCell=candidata;
@@ -81,8 +94,8 @@ public class BlockView {
             cw.updateView(selected);
         }
     }
-    public void isValid(){
-        //TODO: Colorare di verde il blocco se valido, di rosso altrimenti.
+    public boolean isValid(){
+        return block.isValid();
     }
     public void delete(Board board){
         board.removeBlock(this.block);
