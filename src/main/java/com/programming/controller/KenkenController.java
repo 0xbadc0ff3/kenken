@@ -31,6 +31,7 @@ public final class KenkenController {
     private boolean checking = false;
     private BlockView addingTo = null;
     private Collection<CellView> canAdd = new LinkedList<>();
+    private String fileName = "";
     public KenkenController(File file) throws Exception{
         boardView = new BoardView(Board.openBoard(file));
         for(CellView cw : boardView.getCellViews()) cw.setMenu(createMenu(cw));
@@ -38,6 +39,9 @@ public final class KenkenController {
     public KenkenController(int n){
         boardView = new BoardView(new Board(n));
         for(CellView cw : boardView.getCellViews()) cw.setMenu(createMenu(cw));
+    }
+    public KenkenController(){
+        boardView = BoardView.blankBoard();
     }
 
     public JPanel getBoardView(){
@@ -211,8 +215,9 @@ public final class KenkenController {
                             try{
                                 int chosen = Integer.parseInt(e.getActionCommand());
                                 if(chosen<1 || chosen> boardView.getN()) throw new RuntimeException("Numero scelto non valido.");//ridondante
+                                int previousValue = cellView.getValue();
                                 cellView.setValue(chosen);
-                                if(checking) check(cellView);
+                                if(checking) check(cellView, previousValue);
                                 saved=false;
                             }catch(NumberFormatException numberFormatException){
                                 System.out.println("Errore nella selezione del numero.");
@@ -284,8 +289,21 @@ public final class KenkenController {
         }
 
     }
-    public void open(){
-        //TODO
+    public void save(){
+        if(fileName.equals("")) throw new RuntimeException("No file name was specified.");
+        String json = boardView.toJSON();
+        File file = new File(fileName);
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(json);
+            writer.flush();
+            writer.close();
+            System.out.println("File salvato");
+            saved = true;
+        }catch (IOException e){
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Something went wrong while trying to save the file.","Error",JOptionPane.ERROR_MESSAGE);
+        }
     }
     public String toJSON(){
         return boardView.toJSON();
@@ -301,6 +319,8 @@ public final class KenkenController {
         checking=value;
         if(checking){
             for(BlockView blockView: boardView.getBlocks()){
+                checkBlock(blockView);
+                /*
                 if(blockView.isValid()) {
                     for(CellView cellView: blockView.getCellViews()) cellView.setState(CellState.VALID);
                 }else {
@@ -310,17 +330,17 @@ public final class KenkenController {
                             hasValues=false;
                             break;
                         }
-                    if(hasValues) for(CellView cellView: blockView.getCellViews()) cellView.setState(CellState.NOT_VALID);
+                    if(hasValues) for(CellView cellView: blockView.getCellViews()) cellView.setState(CellState.NOT_VALID_BLOCK);
                 }
+                 */
             }
             for(int i=0;i< boardView.getN();i++){
                 List<CellView> row = boardView.getRow(i);
-                LinkedList<CellView> bucket[] = new LinkedList[boardView.getN()];
+                LinkedList<CellView>[] bucket = new LinkedList[boardView.getN()];
                 for(CellView cellView: row){
                     int val = cellView.getValue();
                     if(val<=0) continue;
                     if (bucket[val-1] == null) {
-                        System.out.println("elemento null");//TODO REMOVE
                         LinkedList<CellView> linkedList = new LinkedList<>();
                         linkedList.add(cellView);
                         bucket[val-1] = linkedList;
@@ -332,7 +352,7 @@ public final class KenkenController {
                 for(LinkedList<CellView> list: bucket){
                     if(list !=null && list.size()>1){
                         for(CellView cellView: list){
-                            cellView.setState(CellState.NOT_VALID);
+                            cellView.setState(CellState.NOT_VALID_REPEATED_VALUE);
                         }
                     }
                 }
@@ -344,7 +364,6 @@ public final class KenkenController {
                     int val = cellView.getValue();
                     if(val<=0) continue;
                     if (bucket[val-1] == null) {
-                        System.out.println("elemento null");//TODO REMOVE
                         LinkedList<CellView> linkedList = new LinkedList<>();
                         linkedList.add(cellView);
                         bucket[val-1]= linkedList;
@@ -356,32 +375,36 @@ public final class KenkenController {
                 for(LinkedList<CellView> list: bucket){
                     if(list!=null && list.size()>1){
                         for(CellView cellView: list){
-                            cellView.setState(CellState.NOT_VALID);
+                            cellView.setState(CellState.NOT_VALID_REPEATED_VALUE);
                         }
                     }
                 }
             }
+            return;
+        }
+        for(CellView cellView: boardView.getCellViews()) cellView.setState(CellState.UNKOWN);
+    }
+    private void checkBlock(BlockView blockView){
+        if(blockView.isValid())
+            for(CellView cw: blockView.getCellViews()) {
+                if(cw.getState() != CellState.NOT_VALID_REPEATED_VALUE)
+                    cw.setState(CellState.VALID);
+            }
+        else {
+            boolean hasValues = true;
+            for(CellView cw: blockView.getCellViews()) if(cw.getValue()<=0) hasValues=false;
+            if(hasValues) for(CellView cw: blockView.getCellViews()) cw.setState(CellState.NOT_VALID_BLOCK);
         }
     }
-    private void check(CellView cellView){
+
+    private void check(CellView cellView, int previousValue){
         cellView.setState(CellState.UNKOWN);
-        if(cellView.hasBlock()){
-            BlockView blockView = cellView.getBlock();
-            if(blockView.isValid())
-                for(CellView cw: blockView.getCellViews()) cw.setState(CellState.VALID);
-            else {
-                boolean hasValues = true;
-                for(CellView cw: blockView.getCellViews()) if(cw.getValue()<=0) hasValues=false;
-                if(hasValues) for(CellView cw: blockView.getCellViews()) cw.setState(CellState.NOT_VALID);
-            }
-        }
         List<CellView> toCheck = boardView.getRow(cellView.getRow());
         LinkedList<CellView> bucket[] = new LinkedList[boardView.getN()];
         for(CellView cw : toCheck){
             int val = cw.getValue();
             if(val<=0) continue;
             if (bucket[val-1] == null) {
-                System.out.println("elemento null");//TODO REMOVE
                 LinkedList<CellView> linkedList = new LinkedList<>();
                 linkedList.add(cw);
                 bucket[val-1] = linkedList;
@@ -390,10 +413,18 @@ public final class KenkenController {
                 bucket[val-1].add(cw);
             }
         }
+        //Aggiorno eventuali celle rimaste evidenziate a causa di precedenti errori:
+        if(previousValue>0 && bucket[previousValue-1]!=null && bucket[previousValue-1].size()==1) {
+            CellView current = bucket[previousValue-1].getFirst();
+            if(current.getBlock().isValid()) current.setState(CellState.VALID);
+            else {
+               if(current.getState()!=CellState.NOT_VALID_BLOCK) current.setState(CellState.UNKOWN);
+            }
+        }
         for(LinkedList<CellView> list: bucket){
             if(list != null && list.size()>1){
                 for(CellView cw: list){
-                    cw.setState(CellState.NOT_VALID);
+                    cw.setState(CellState.NOT_VALID_REPEATED_VALUE);
                 }
             }
         }
@@ -403,7 +434,6 @@ public final class KenkenController {
             int val = cw.getValue();
             if(val<=0) continue;
             if (bucket[val-1] == null) {
-                System.out.println("elemento null");//TODO REMOVE
                 LinkedList<CellView> linkedList = new LinkedList<>();
                 linkedList.add(cw);
                 bucket[val-1]= linkedList;
@@ -412,16 +442,25 @@ public final class KenkenController {
                 bucket[val-1].add(cw);
             }
         }
+        //Aggiorno eventuali celle rimaste evidenziate a causa di precedenti errori:
+        if(previousValue>0 && bucket[previousValue-1]!=null && bucket[previousValue-1].size()==1) {
+            CellView current = bucket[previousValue-1].getFirst();
+            if(current.getBlock().isValid()) current.setState(CellState.VALID);
+            else {
+                if(current.getState()!=CellState.NOT_VALID_BLOCK) current.setState(CellState.UNKOWN);
+            }
+        }
         for(LinkedList<CellView> list: bucket){
             if(list != null && list.size()>1){
                 for(CellView cw: list){
-                    cw.setState(CellState.NOT_VALID);
+                    cw.setState(CellState.NOT_VALID_REPEATED_VALUE);
                 }
             }
         }
+        checkBlock(cellView.getBlock());
     }
 
-    public void setNewBoard(int n){//TODO
+    public void setNewBoard(int n){
         if(n<3 || n> Utility.MAX_BOARD_SIZE) throw new IllegalArgumentException("Dimensione nuova board non valida.");
         boardView.changeBoard(new Board(n));
         canAdd = new LinkedList<>();
@@ -437,5 +476,14 @@ public final class KenkenController {
         isAdding = false;
 
         for(CellView cw : boardView.getCellViews()) cw.setMenu(createMenu(cw));
+    }
+    public String getFileName(){
+        return fileName;
+    }
+    public void setFileName(String name){
+        fileName=name;
+    }
+    public boolean hasFileName(){
+        return !fileName.equals("");
     }
 }

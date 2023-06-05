@@ -149,14 +149,17 @@ public class CellView {
         constraints.setText(toDisplay.toString());
     }
     public void setState(CellState state){
+        if(this.state == CellState.NOT_VALID_BLOCK && state == CellState.NOT_VALID_REPEATED_VALUE || this.state==state) return;
         this.state=state;
         switch (state){
             case VALID: this.textField.setForeground(Utility.VALID_COLOR); break;
-            case NOT_VALID: this.textField.setForeground(Utility.WARNING_COLOR); break;
+            case NOT_VALID_REPEATED_VALUE:
+            case NOT_VALID_BLOCK: this.textField.setForeground(Utility.WARNING_COLOR); break;
             case UNKOWN: this.textField.setForeground(Utility.DEFAULT_COLOR); break;
             default: System.out.println("Stato sconosciuto: "+state); this.state=CellState.UNKOWN; break;
         }
     }
+    public CellState getState() { return state; }
     /*
     public void addConstraints(int result){
         this.result=result;

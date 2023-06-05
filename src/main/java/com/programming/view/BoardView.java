@@ -44,6 +44,9 @@ public final class BoardView extends JPanel{//Proxy
             }
         }
     }
+    private BoardView(){
+        super(new BorderLayout());
+    }
     public CellView getCellView(int i, int j){
         return cellViews[i][j];
     }
@@ -121,5 +124,8 @@ public final class BoardView extends JPanel{//Proxy
             blockViews.add(new BlockView(board, this, block));
         }
         this.updateUI();
+    }
+    public static BoardView blankBoard(){
+        return new BoardView();
     }
 }

@@ -1,11 +1,9 @@
 package com.programming;
 
 import com.programming.controller.KenkenController;
-import com.programming.model.Board;
 import com.programming.model.BoardState;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -13,9 +11,9 @@ import java.io.File;
 
 public class App 
 {
-    private static boolean exitConsent(){
-        //TODO
-        return false;
+    private static boolean exitConsent(JFrame parent){
+        int chosen = JOptionPane.showConfirmDialog(parent,"Unsaved changes may be lost. Do you want to continue?","Warning",JOptionPane.YES_NO_OPTION);
+        return chosen==JOptionPane.YES_OPTION;
     }
 
     public static void main( String[] args )
@@ -24,16 +22,22 @@ public class App
         try {
             UIManager.setLookAndFeel(
                     UIManager.getSystemLookAndFeelClassName());
+            JFrame.setDefaultLookAndFeelDecorated(true);
         } catch (Exception e) {
         }
-        JFrame.setDefaultLookAndFeelDecorated(true);
+
+
         JFrame window = new JFrame("KenKen");
         JPanel panel = new JPanel(new GridLayout());
         window.setIconImage(Utility.APP_LOGO);
-        window.setSize(900,900);
-        KenkenController controller = new KenkenController(5);
+        window.setSize(Utility.WIDTH,Utility.HEIGHT);
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        window.setLocation(dim.width/2-window.getSize().width/2, dim.height/2-window.getSize().height/2);
+        KenkenController controller = new KenkenController();
         panel.add(controller.getBoardView());
         window.add(panel);
+
+
         //Create Menu Bar
         JMenuBar menuBar = new JMenuBar();
         JMenu file = new JMenu("File");
@@ -43,6 +47,8 @@ public class App
         open.setActionCommand("open");
         JMenuItem save = new JMenuItem("Save");
         save.setActionCommand("save");
+        JMenuItem saveAs = new JMenuItem("Save As");
+        saveAs.setActionCommand("save-as");
 
         JMenu game = new JMenu("Game");
         JMenuItem startGame = new JMenuItem("Start game");
@@ -68,34 +74,36 @@ public class App
         String helpContent = "Software version: " +Utility.APP_VERSION+"\n"+
                 "This software is designed to create KenKen's board template, store them, play them and find every valid solution." +
                 "\nAuthor: Alberto Febbraro";
+
+
         //Action Listener:
         ActionListener actionListener = e -> {
             JFileChooser fileChooser;
-            JFrame chooserWindow;
             System.out.println("Ricevuto comando "+e.getActionCommand());
             switch (e.getActionCommand()){
                 //File
                 case "new":
                     if(!controller.isSaved())
-                        if(!exitConsent()) break;
+                        if(!exitConsent(window)) break;
+                    controller.setFileName("");
                     Integer sizes[] = {3,4,5,6};
                     int n = (int) JOptionPane.showInputDialog(window,"Select new Board size: ", "New Board",JOptionPane.PLAIN_MESSAGE,null,sizes,sizes[0]);
                     controller.setNewBoard(n);
                     break;
                 case "open":
                     if(!controller.isSaved())
-                        if(!exitConsent()) break;
+                        if(!exitConsent(window)) break;
                     fileChooser = new JFileChooser();
-                    chooserWindow = new JFrame();
                     fileChooser.setFileFilter(new FileNameExtensionFilter("JSON files", "json"));
                     if(fileChooser.showOpenDialog(window)!=JFileChooser.APPROVE_OPTION) break;
                     try{
                         controller.openBoard(fileChooser.getSelectedFile());
-                        //});
+                        controller.setFileName(fileChooser.getSelectedFile().getName());
                         if(controller.getState() == BoardState.PLAYING){
                             edit.setEnabled(true);
                             clear.setEnabled(true);
                             startGame.setEnabled(false);
+                            enableCheck.setEnabled(true);
                             findSolutions.setEnabled(true);
                         }
                     }catch(Exception exception){
@@ -105,6 +113,12 @@ public class App
                     System.out.println(controller.toJSON());
                     break;
                 case "save":
+                    if(controller.isSaved()) break;
+                    if(controller.hasFileName()){
+                        controller.save();
+                        break;
+                    }
+                case "save-as":
                     fileChooser = new JFileChooser(){
                         @Override
                         public void approveSelection(){
@@ -127,10 +141,10 @@ public class App
                             super.approveSelection();
                         }
                     };
-                    chooserWindow = new JFrame();
                     fileChooser.setFileFilter(new FileNameExtensionFilter("JSON files", "json"));
-                    if(fileChooser.showSaveDialog(chooserWindow)!=JFileChooser.APPROVE_OPTION) break;
+                    if(fileChooser.showSaveDialog(window)!=JFileChooser.APPROVE_OPTION) break;
                     controller.save(fileChooser.getSelectedFile());
+                    if(!controller.hasFileName()) controller.setFileName(fileChooser.getSelectedFile().getName());
                     break;
                 //Game
                 case "start":
@@ -174,7 +188,7 @@ public class App
                     //TODO
                     break;
                 case "quit":
-                    if(!controller.isSaved() && !exitConsent()) break;
+                    if(!controller.isSaved() && !exitConsent(window)) break;
                     System.exit(0);
                     break;
                 //About
@@ -186,8 +200,8 @@ public class App
             }
         };
 
-        nuovo.addActionListener(actionListener); open.addActionListener(actionListener); save.addActionListener(actionListener);
-        file.add(nuovo); file.add(open); file.add(save);
+        nuovo.addActionListener(actionListener); open.addActionListener(actionListener); save.addActionListener(actionListener); saveAs.addActionListener(actionListener);
+        file.add(nuovo); file.add(open); file.add(save); file.add(saveAs);
         startGame.addActionListener(actionListener); edit.addActionListener(actionListener); clear.addActionListener(actionListener);
         enableCheck.addActionListener(actionListener); findSolutions.addActionListener(actionListener); quit.addActionListener(actionListener);
         game.add(startGame); game.add(edit); game.add(clear); game.add(enableCheck); game.add(findSolutions); game.add(quit);
