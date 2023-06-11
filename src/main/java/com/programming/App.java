@@ -106,6 +106,13 @@ public class App
                             enableCheck.setEnabled(true);
                             findSolutions.setEnabled(true);
                         }
+                        else if(controller.getState()==BoardState.SETTING){
+                            edit.setEnabled(false);
+                            clear.setEnabled(false);
+                            startGame.setEnabled(true);
+                            enableCheck.setEnabled(false);
+                            findSolutions.setEnabled(false);
+                        }
                     }catch(Exception exception){
                         JOptionPane.showMessageDialog(null, "File missing or not valid.", "Error", JOptionPane.ERROR_MESSAGE);
                         exception.printStackTrace();
@@ -130,7 +137,6 @@ public class App
                                         super.approveSelection();
                                         return;
                                     case JOptionPane.NO_OPTION:
-                                        return;
                                     case JOptionPane.CLOSED_OPTION:
                                         return;
                                     case JOptionPane.CANCEL_OPTION:

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public final class KenkenController {
+    //TODO: Fixare bug: Quando apro una nuova board e sono in game resto in game.
 
     private final BoardView boardView;
     //Per i listener:
@@ -91,6 +92,10 @@ public final class KenkenController {
         switch (actionCommand){
             case "add":
                 if(!canAdd.contains(cellView)) throw new IllegalArgumentException("Celle non adiacenti.");
+                if(addingTo.getOperation()==Operation.DIV || addingTo.getOperation()==Operation.SUB){
+                    JOptionPane.showMessageDialog(boardView,"Error: Cannot add a third cell in a block with binary operation.","Error",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 addingTo.addCell(cellView);
                 addingTo.deselectBlock();
                 isAdding = false; addingTo=null; canAdd.clear();
@@ -162,7 +167,7 @@ public final class KenkenController {
                     deselectBlock.addActionListener(actionListener);
                     menu.add(deselectBlock);
                 }else {
-                    if (!cellView.getBlock().isFull()) {
+                    if (!(cellView.getBlock().isFull() || boardView.getNotInBlockCells().isEmpty())) {
                         JMenuItem addToBlock = new JMenuItem("Select Block");
                         addToBlock.setActionCommand("select");
                         addToBlock.addActionListener(actionListener);
@@ -173,26 +178,33 @@ public final class KenkenController {
                 setResult.setActionCommand("set-result");
                 setResult.addActionListener(actionListener);
                 menu.add(setResult);
+                System.out.println(cellView.getBlock().getCurrentSize());
+                if(cellView.getBlock().getCurrentSize()>1) {
+                    JMenu setOperation = new JMenu("Set Operation");
+                    JMenuItem add = new JMenuItem("+");
+                    add.setActionCommand("set-operation-add");
+                    add.addActionListener(actionListener);
+                    setOperation.add(add);
 
-                JMenu setOperation = new JMenu("Set Operation");
-                JMenuItem add = new JMenuItem("+");
-                add.setActionCommand("set-operation-add");
-                add.addActionListener(actionListener);
-                setOperation.add(add);
-                JMenuItem sub = new JMenuItem("-");
-                sub.setActionCommand("set-operation-sub");
-                sub.addActionListener(actionListener);
-                setOperation.add(sub);
-                JMenuItem mul = new JMenuItem("x");
-                mul.setActionCommand("set-operation-mul");
-                mul.addActionListener(actionListener);
-                setOperation.add(mul);
-                JMenuItem div = new JMenuItem("/");
-                div.setActionCommand("set-operation-div");
-                div.addActionListener(actionListener);
-                setOperation.add(div);
-                menu.add(setOperation);
+                    JMenuItem mul = new JMenuItem("x");
+                    mul.setActionCommand("set-operation-mul");
+                    mul.addActionListener(actionListener);
+                    setOperation.add(mul);
 
+                    if(cellView.getBlock().getCurrentSize()==2) {
+                        JMenuItem sub = new JMenuItem("-");
+                        sub.setActionCommand("set-operation-sub");
+                        sub.addActionListener(actionListener);
+                        setOperation.add(sub);
+
+                        JMenuItem div = new JMenuItem("/");
+                        div.setActionCommand("set-operation-div");
+                        div.addActionListener(actionListener);
+                        setOperation.add(div);
+                    }
+
+                    menu.add(setOperation);
+                }
                 JMenuItem remove = new JMenuItem("Remove Block");
                 remove.setActionCommand("remove-block");
                 remove.addActionListener(actionListener);
@@ -463,6 +475,7 @@ public final class KenkenController {
     public void setNewBoard(int n){
         if(n<3 || n> Utility.MAX_BOARD_SIZE) throw new IllegalArgumentException("Dimensione nuova board non valida.");
         boardView.changeBoard(new Board(n));
+        for(CellView cellView : boardView.getCellViews()) cellView.setMenu(createMenu(cellView));
         canAdd = new LinkedList<>();
         addingTo = null;
         isAdding = false;

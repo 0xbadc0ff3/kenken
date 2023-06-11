@@ -75,7 +75,6 @@ public class BlockView {//Proxy
     }
     public void setVincolo(int vincolo){
         this.block.setVincolo(vincolo);
-        //TODO: Rappresentazione grafica del vincolo!
         //Il vincolo viene mostrato nella cella avente min(i) e poi min(j) del blocco.
         updateDisplayCell(true);
         displayCell.addConstraints();
@@ -83,7 +82,6 @@ public class BlockView {//Proxy
 
     public void setOperation(Operation operation){
         this.block.setOperation(operation);
-        //TODO: Rappresentazione grafica dell'operazione, vicino al vincolo.
         updateDisplayCell(true);
         displayCell.addConstraints();
     }
@@ -94,11 +92,15 @@ public class BlockView {//Proxy
             cw.updateView(selected);
         }
     }
+    public int getCurrentSize(){
+        return block.getCurrentSize();
+    }
     public boolean isValid(){
         return block.isValid();
     }
     public void delete(Board board){
         board.removeBlock(this.block);
+        displayCell.removeConstraints();
         for(CellView cw: cellViews){
             cw.removeBlock();
         }
