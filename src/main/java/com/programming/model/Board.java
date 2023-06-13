@@ -247,15 +247,6 @@ public class Board {
             sb.append("]}");
             if(iterator.hasNext()) sb.append(",");
         }
-        /*
-        sb.append("],\"notInBlock\":[");
-        Iterator<Cell> it = notInBlocco.iterator();
-        while(it.hasNext()){
-            Cell cell = it.next();
-            sb.append("{\"i\":"+cell.getRow()+",\"j\":"+cell.getCol()+"}");
-            if(it.hasNext()) sb.append(",");
-        }
-        */
         sb.append("]}");
         return sb.toString();
     }

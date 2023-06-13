@@ -9,6 +9,8 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+
+
 public class App 
 {
     private static boolean exitConsent(JFrame parent){
@@ -18,6 +20,8 @@ public class App
 
     public static void main( String[] args )
     {
+        //Set Dock Icon for macOS
+        Taskbar.getTaskbar().setIconImage(Utility.APP_LOGO);
         //Set Look & Feel
         try {
             UIManager.setLookAndFeel(
@@ -85,9 +89,17 @@ public class App
                 case "new":
                     if(!controller.isSaved())
                         if(!exitConsent(window)) break;
-                    controller.setFileName("");
                     Integer sizes[] = {3,4,5,6};
                     int n = (int) JOptionPane.showInputDialog(window,"Select new Board size: ", "New Board",JOptionPane.PLAIN_MESSAGE,null,sizes,sizes[0]);
+                    controller.setFileName("");
+                    if(controller.getState()==BoardState.PLAYING) {
+                        controller.editBoard();
+                        edit.setEnabled(false);
+                        clear.setEnabled(false);
+                        startGame.setEnabled(true);
+                        enableCheck.setEnabled(false);
+                        findSolutions.setEnabled(false);
+                    }
                     controller.setNewBoard(n);
                     break;
                 case "open":
@@ -122,6 +134,7 @@ public class App
                 case "save":
                     if(controller.isSaved()) break;
                     if(controller.hasFileName()){
+                        System.out.println("salvo");
                         controller.save();
                         break;
                     }

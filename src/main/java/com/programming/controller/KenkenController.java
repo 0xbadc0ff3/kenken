@@ -279,14 +279,6 @@ public final class KenkenController {
     }
     public void save(File file){
         String json = boardView.toJSON();
-        /*
-        String extension = getFileExtension(file);
-        if(!extension.equals("json")){
-            String path = file.getAbsolutePath();
-            path = path+".json";
-            if(file.exists()) file.delete();
-            file = new File(path);
-        }*/
         file = getFileAfterSaving(file);
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));
@@ -303,6 +295,8 @@ public final class KenkenController {
     }
     public void save(){
         if(fileName.equals("")) throw new RuntimeException("No file name was specified.");
+        this.save(new File(fileName));
+        /*
         String json = boardView.toJSON();
         File file = new File(fileName);
         try {
@@ -316,6 +310,8 @@ public final class KenkenController {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Something went wrong while trying to save the file.","Error",JOptionPane.ERROR_MESSAGE);
         }
+
+         */
     }
     public String toJSON(){
         return boardView.toJSON();
@@ -324,7 +320,13 @@ public final class KenkenController {
         return saved;
     }
     public BoardState getState(){
-        return boardView.getState();
+        BoardState state = null;
+        try{
+            state = boardView.getState();
+        }catch(NullPointerException e){
+            state = null;//ridondante
+        }
+        return state;
     }
     public boolean isChecking() { return checking; }
     public void setChecking(boolean value) {
