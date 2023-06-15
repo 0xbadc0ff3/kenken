@@ -62,6 +62,11 @@ public class ConcreteBlock implements Block {
 
     @Override
     public boolean isValid() {
+        if(celle.size()==1) {
+            if (vincolo > 0) return celle.iterator().next().getValue() == vincolo;
+            else return false;
+        }
+
         if(!this.hasConstraints()) throw new RuntimeException("I vincoli del blocco non sono ancora stati definiti.");
         int value;
         Iterator<Cell> it = this.iterator();
@@ -101,8 +106,6 @@ public class ConcreteBlock implements Block {
     public boolean hasConstraints() {
         return this.vincolo>0 && (this.op!=null || this.getCurrentSize()==1);
     }
-    public boolean hasResult() { return vincolo > 0; }
-    public boolean hasOperation() { return this.op!=null; }
     @Override
     public boolean isFull() {
         return celle.size()==Utility.MAX_BLOCK_SIZE;

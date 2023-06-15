@@ -128,4 +128,12 @@ public final class BoardView extends JPanel{//Proxy
     public static BoardView blankBoard(){
         return new BoardView();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BoardView boardView = (BoardView) o;
+        return board.equals(boardView.board);
+    }
 }

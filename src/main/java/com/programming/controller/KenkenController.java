@@ -11,19 +11,16 @@ import com.programming.view.CellState;
 import com.programming.view.CellView;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.List;
 
 public final class KenkenController {
-    //TODO: Fixare bug: Quando apro una nuova board e sono in game resto in game.
 
     private final BoardView boardView;
     //Per i listener:
@@ -178,7 +175,7 @@ public final class KenkenController {
                 setResult.setActionCommand("set-result");
                 setResult.addActionListener(actionListener);
                 menu.add(setResult);
-                System.out.println(cellView.getBlock().getCurrentSize());
+                //System.out.println(cellView.getBlock().getCurrentSize());
                 if(cellView.getBlock().getCurrentSize()>1) {
                     JMenu setOperation = new JMenu("Set Operation");
                     JMenuItem add = new JMenuItem("+");
@@ -285,7 +282,7 @@ public final class KenkenController {
             writer.write(json);
             writer.flush();
             writer.close();
-            System.out.println("File salvato");
+            //System.out.println("File salvato");
             saved = true;
         }catch (IOException e){
             e.printStackTrace();
@@ -501,4 +498,13 @@ public final class KenkenController {
     public boolean hasFileName(){
         return !fileName.equals("");
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KenkenController that = (KenkenController) o;
+        return boardView.equals(that.boardView);
+    }
+
 }

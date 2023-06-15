@@ -22,7 +22,7 @@ public class Board {
         @Override
         public void add(Cell cell){
             if(!Board.this.notInBlocco.contains(cell)) throw new RuntimeException("Cella "+cell.getRow()+" "+cell.getCol()+" già appartenente ad un blocco.");
-            assert Board.this.state==BoardState.PLAYING;
+            assert Board.this.state==BoardState.SETTING;
             /*
             if(cell.getRow()<0 || cell.getRow() >= Board.this.N) throw new RuntimeException("Indice riga non valido.");
             if(cell.getCol()<0 || cell.getCol() >= Board.this.N) throw new RuntimeException("Indice colonna non valido.");
@@ -262,7 +262,6 @@ public class Board {
         StringTokenizer stringTokenizer = new StringTokenizer(text.toString(),":\"\t\n{}[], ");
         text=null;//libero memoria.
         String currentToken = stringTokenizer.nextToken().strip();
-        System.out.println(currentToken);
         if(!currentToken.equals("N")) throw new Exception("File not valid. Found "+currentToken+" instead of N");
         currentToken = stringTokenizer.nextToken().strip();
         Board opened = new Board(Integer.parseInt(currentToken));
@@ -348,4 +347,13 @@ public class Board {
 
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Board board = (Board) o;
+        return N == board.N && initializationStatus == board.initializationStatus && state == board.state && Arrays.deepEquals(celle, board.celle) && Objects.equals(blocchi, board.blocchi) && notInBlocco.equals(board.notInBlocco);
+    }
+
 }
