@@ -92,7 +92,7 @@ public class App
                 case "new":
                     if(!controller.isSaved())
                         if(!exitConsent(window)) break;
-                    Integer sizes[] = {3,4,5,6};
+                    Integer[] sizes = {3,4,5,6};
                     int n = (int) JOptionPane.showInputDialog(window,"Select new Board size: ", "New Board",JOptionPane.PLAIN_MESSAGE,null,sizes,sizes[0]);
                     controller.setFileName("");
                     if(controller.getState()==BoardState.PLAYING) {
@@ -206,7 +206,7 @@ public class App
                     }
                     break;
                 case "find-solutions":
-                    int num=1;
+                    int num;
                     try {
                         num = Integer.parseInt(JOptionPane.showInputDialog(null,"How many solutions do you want to find?","Find Solutions",JOptionPane.PLAIN_MESSAGE));
                         if(num<1) break;

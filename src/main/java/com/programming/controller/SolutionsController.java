@@ -6,17 +6,13 @@ import com.programming.view.BoardView;
 import com.programming.view.SolutionView;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 public class SolutionsController{
-    private JPanel panel = new JPanel(new BorderLayout());
-    private SolutionView view;
-    private ArrayList<Memento> solutions;
+    private final SolutionView view;
+    private final ArrayList<Memento> solutions;
     //private ListIterator<Memento> listIterator;
     private int current =-1;
     public SolutionsController(BoardView bw, int n){
@@ -51,14 +47,11 @@ public class SolutionsController{
     public JPanel getPanel(){
         return view.getView();
     }
+    public int getTotalSolutions() { return solutions.size(); }
+    public int getCurrentSolutionNumber() { return current+1; }
     public static void main(String... args) throws Exception{
         BoardView b = new BoardView(Board.openBoard(new File("template1.json")));
         b.startGame();
-        //BoardView b2 = new BoardView(b.getTemplate());
-        //LinkedList<Memento> soluzioni = new LinkedList<>();
-        //KenKenSolver solver = b2.getSolver(4, soluzioni);
-        //solver.risolvi();
-        //System.out.println(soluzioni.toString());
-        SolutionsController controller = new SolutionsController(new BoardView(b.getTemplate()),4);
+        new SolutionsController(new BoardView(b.getTemplate()),4);
     }
 }

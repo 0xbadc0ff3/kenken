@@ -82,12 +82,12 @@ public final class BoardView extends JPanel implements Originator {//Proxy
         return board.getNotInBlockCells();
     }
     public List<CellView> getRow(int i){
-        List<CellView> row = new ArrayList<CellView>(board.getN());
+        List<CellView> row = new ArrayList<>(board.getN());
         for(int j=0; j<board.getN();j++) row.add(cellViews[i][j]);
         return Collections.unmodifiableList(row);//superfluo
     }
     public List<CellView> getCol(int j){
-        List<CellView> col = new ArrayList<CellView>(board.getN());
+        List<CellView> col = new ArrayList<>(board.getN());
         for(int i=0; i<board.getN();i++) col.add(cellViews[i][j]);
         return Collections.unmodifiableList(col);//superfluo
     }
@@ -133,7 +133,7 @@ public final class BoardView extends JPanel implements Originator {//Proxy
     }
     public KenKenSolver getSolver(int n, Collection<Memento> out){
         Board copy = new Board(board,false);
-        return new KenKenSolver(board,n,out);
+        return new KenKenSolver(copy,n,out);
     }
     @Override
     public Memento takeSnapshot(){

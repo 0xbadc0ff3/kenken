@@ -11,9 +11,10 @@ import static com.programming.Utility.BLOCK_BORDER_SIZE;
 import static com.programming.Utility.DEFAULT_BORDER_SIZE;
 
 public class CellView {
-    private Cell cell;
-    private JPanel panel;
-    private JTextField textField, constraints;
+    private final Cell cell;
+    private final JPanel panel;
+    private final JTextField textField;
+    private JTextField constraints;
     private BlockView block;
     //private BoardView boardView;
     private int top, left, bottom, right;
@@ -21,11 +22,9 @@ public class CellView {
     private Integer result = null;
     private boolean hasConstraints = false;
     private CellState state = CellState.UNKOWN;
-    private JPopupMenu menu;
+
     //private final int N;
     public CellView(Cell cell){
-        //this.boardView = boardView;
-        //this.N = boardView.getN();
         this.block=null;
         this.cell = cell;
         this.panel = new JPanel(new BorderLayout());
@@ -109,7 +108,6 @@ public class CellView {
         return cell;
     }
     public void setMenu(JPopupMenu menu){
-        this.menu = menu;
         this.textField.setComponentPopupMenu(menu);
     }
     public boolean hasBlock(){

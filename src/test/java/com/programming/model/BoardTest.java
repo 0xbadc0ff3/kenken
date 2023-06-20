@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -146,5 +145,16 @@ class BoardTest {
                 ()->assertFalse(board.getCell(0,0)==copy.getCell(0,0)),
                 ()->assertFalse(board.getBlocks()==copy.getBlocks())
         );
+    }
+
+    @Test
+    @DisplayName("Check if hashCode works correctly.")
+    void testHashCode(){
+        try {
+            board = Board.openBoard(new File("template1_solution.json"));
+        } catch (IOException e) {
+            fail("Couldn't open template file.");
+        }
+        assertEquals(board.hashCode(),new Board(board,false).hashCode());
     }
 }

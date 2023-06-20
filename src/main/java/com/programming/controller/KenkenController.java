@@ -10,9 +10,9 @@ import com.programming.view.BlockView;
 import com.programming.view.BoardView;
 import com.programming.view.CellState;
 import com.programming.view.CellView;
+import jdk.jshell.execution.Util;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -70,7 +70,7 @@ public final class KenkenController {
         return adiacenti;
     }
 
-    private void updateMenu(){//resetta il menu delle celle a seguito di un'operazione di inserimento.
+    private void updateMenu(){//resetta il menu delle celle in seguito a un'operazione d' inserimento.
         for(CellView cellView: boardView.getCellViews()) {
             //cellView.updateView(false);
             cellView.setMenu(createMenu(cellView));
@@ -119,7 +119,7 @@ public final class KenkenController {
                 updateMenu();
                 break;
             case "set-result":
-                int result = 0;
+                int result;
                 try{
                     result = Integer.parseInt(JOptionPane.showInputDialog(boardView, "Please provide the result which has to be obtained from the current block.", "Set Block Result", JOptionPane.PLAIN_MESSAGE));
                     cellView.getBlock().setVincolo(result);
@@ -272,34 +272,40 @@ public final class KenkenController {
             return;
         }
         JFrame solutionsFrame = new JFrame("Solutions");
+        JTextField navigation = new JTextField("0/0",8);
+        navigation.setForeground(Utility.DEFAULT_COLOR);
+        navigation.setEditable(false);
+        navigation.setVisible(true);
 
-        Memento initialSnapshot = boardView.takeSnapshot();
         SolutionsController solutionsController = new SolutionsController(new BoardView(boardView.getTemplate()), n);
+        if(solutionsController.getTotalSolutions()>0) navigation.setText("1/"+solutionsController.getTotalSolutions());
 
         solutionsFrame.add(solutionsController.getPanel(), BorderLayout.CENTER);
         JButton previous = new JButton("Previous"), next = new JButton("Next");
         previous.setEnabled(false); next.setEnabled(solutionsController.hasNextSolution());
-        ActionListener actionListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(e.getSource()==previous){
-                    solutionsController.previousSolution();
-                    previous.setEnabled(solutionsController.hasPreviousSolution());
-                    next.setEnabled(solutionsController.hasNextSolution());
-                }else if(e.getSource()==next){
-                    solutionsController.nextSolution();
-                    next.setEnabled(solutionsController.hasNextSolution());
-                    previous.setEnabled(solutionsController.hasPreviousSolution());
-                }else{
-                    System.out.println("Unknown event source: "+e.getSource());
-                }
+        ActionListener actionListener = e -> {
+            if(e.getSource()==previous){
+                solutionsController.previousSolution();
+                previous.setEnabled(solutionsController.hasPreviousSolution());
+                next.setEnabled(solutionsController.hasNextSolution());
+                navigation.setText(solutionsController.getCurrentSolutionNumber()+"/"+solutionsController.getTotalSolutions());
+            }else if(e.getSource()==next){
+                solutionsController.nextSolution();
+                next.setEnabled(solutionsController.hasNextSolution());
+                previous.setEnabled(solutionsController.hasPreviousSolution());
+                navigation.setText(solutionsController.getCurrentSolutionNumber()+"/"+solutionsController.getTotalSolutions());
+            }else{
+                System.out.println("Unknown event source: "+e.getSource());
             }
         };
         next.addActionListener(actionListener); previous.addActionListener(actionListener);
-        JPanel buttonsPanel = new JPanel(new FlowLayout());
-        buttonsPanel.add(previous); buttonsPanel.add(next);
-        buttonsPanel.setVisible(true);
-        solutionsFrame.add(buttonsPanel,BorderLayout.SOUTH);
+
+        JPanel bottomPanel = new JPanel(new FlowLayout());
+        bottomPanel.add(previous); bottomPanel.add(next);
+        bottomPanel.setVisible(true);
+        bottomPanel.add(navigation);
+        solutionsFrame.add(bottomPanel,BorderLayout.SOUTH);
+
         solutionsFrame.setIconImage(Utility.APP_LOGO);
         solutionsFrame.setSize(Utility.WIDTH,Utility.HEIGHT);
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -311,7 +317,6 @@ public final class KenkenController {
         solutionsFrame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                boardView.restore(initialSnapshot);
                 boardView.setVisible(true);
             }
         });
@@ -352,22 +357,6 @@ public final class KenkenController {
     public void save(){
         if(fileName.equals("")) throw new RuntimeException("No file name was specified.");
         this.save(new File(fileName));
-        /*
-        String json = boardView.toJSON();
-        File file = new File(fileName);
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            writer.write(json);
-            writer.flush();
-            writer.close();
-            System.out.println("File salvato");
-            saved = true;
-        }catch (IOException e){
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Something went wrong while trying to save the file.","Error",JOptionPane.ERROR_MESSAGE);
-        }
-
-         */
     }
     public String toJSON(){
         return boardView.toJSON();
@@ -376,11 +365,11 @@ public final class KenkenController {
         return saved;
     }
     public BoardState getState(){
-        BoardState state = null;
+        BoardState state;
         try{
             state = boardView.getState();
         }catch(NullPointerException e){
-            state = null;//ridondante
+            state = null;
         }
         return state;
     }
@@ -416,7 +405,7 @@ public final class KenkenController {
             }
             for(int j=0;j< boardView.getN();j++){
                 List<CellView> col = boardView.getCol(j);
-                LinkedList<CellView> bucket[] = new LinkedList[boardView.getN()];
+                LinkedList<CellView>[] bucket = new LinkedList[boardView.getN()];
                 for(CellView cellView: col){
                     int val = cellView.getValue();
                     if(val<=0) continue;
@@ -457,7 +446,7 @@ public final class KenkenController {
     private void check(CellView cellView, int previousValue){
         cellView.setState(CellState.UNKOWN);
         List<CellView> toCheck = boardView.getRow(cellView.getRow());
-        LinkedList<CellView> bucket[] = new LinkedList[boardView.getN()];
+        LinkedList<CellView>[] bucket = new LinkedList[boardView.getN()];
         for(CellView cw : toCheck){
             int val = cw.getValue();
             if(val<=0) continue;

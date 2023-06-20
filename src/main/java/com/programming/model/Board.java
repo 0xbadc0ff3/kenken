@@ -9,7 +9,7 @@ import java.util.*;
 
 public class Board implements Originator {
     private final class AttachedBlock implements Block {//DECORATOR
-        private Block block;
+        private final Block block;
         public AttachedBlock(Block b){
             if(b instanceof AttachedBlock) throw new IllegalArgumentException("Blocco già associato alla board.");
             this.block=new ConcreteBlock();
@@ -120,7 +120,7 @@ public class Board implements Originator {
             return new BlockIterator();
         }
         private class BlockIterator implements Iterator<Cell>{//Voglio bloccare l'operazione di Remove.
-        private Iterator<Cell> iterator = block.iterator();
+        private final Iterator<Cell> iterator = block.iterator();
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
@@ -138,8 +138,8 @@ public class Board implements Originator {
         }
     }
     private static class BoardMemento implements Memento {
-        private int[][] values;
-        private int hash;
+        private final int[][] values;
+        private final int hash;
         public BoardMemento(Board b){
             values = new int[b.N][b.N];
             for(int i=0;i<values.length;i++)
@@ -157,10 +157,10 @@ public class Board implements Originator {
     }
     private final int N;
     private BoardState state;
-    private Cell[][] celle;
-    private List<AttachedBlock> blocchi;
+    private final Cell[][] celle;
+    private final List<AttachedBlock> blocchi;
     private boolean initializationStatus = false;//indica se ogni cella appartiene ad un blocco. (corrisponde ad notInBlocco.size()==0)
-    private Set<Cell> notInBlocco;
+    private final Set<Cell> notInBlocco;
 
     public Board(int n){
         if(n<3) throw new IllegalArgumentException("Board troppo piccola.");
@@ -168,8 +168,8 @@ public class Board implements Originator {
         this.N = n;
         this.state = BoardState.SETTING;
         celle = new Cell[N][N];
-        blocchi = new LinkedList<AttachedBlock>();
-        notInBlocco = new HashSet<Cell>();
+        blocchi = new LinkedList<>();
+        notInBlocco = new HashSet<>();
         //Inizializzazione della matrice
         for(int i=0;i<N;i++)
             for(int j=0;j<N;j++) {
@@ -265,12 +265,12 @@ public class Board implements Originator {
     }
     public String toJSON(){
         StringBuilder sb = new StringBuilder(200);
-        sb.append("{\"N\":"+N+",\"state\":"+(this.state==BoardState.SETTING?0:1));
+        sb.append("{\"N\":").append(N).append(",\"state\":").append(this.state == BoardState.SETTING ? 0 : 1);
         if(this.state==BoardState.PLAYING){
             sb.append(",\"values\":[");
             for(int i=0; i<N;i++)
                 for(int j=0; j<N; j++){
-                    sb.append(celle[i][j].getValue()+",");
+                    sb.append(celle[i][j].getValue()).append(",");
                 }
             sb.delete(sb.length()-1,sb.length());
             sb.append("]");
@@ -279,12 +279,11 @@ public class Board implements Originator {
         Iterator<AttachedBlock> iterator = blocchi.iterator();
         while(iterator.hasNext()){
             Block block = iterator.next();
-            sb.append("{\"size\":"+block.getCurrentSize()+"," +"\"result\":"+block.getVincolo()+",\"operation\":\""+block.getOperation()+"\","+
-                    "\"cells\":[");
+            sb.append("{\"size\":").append(block.getCurrentSize()).append(",").append("\"result\":").append(block.getVincolo()).append(",\"operation\":\"").append(block.getOperation()).append("\",").append("\"cells\":[");
             Iterator<Cell> it = block.iterator();
             while(it.hasNext()){
                 Cell cell = it.next();
-                sb.append("{\"i\":"+cell.getRow()+",\"j\":"+cell.getCol()+"}");
+                sb.append("{\"i\":").append(cell.getRow()).append(",\"j\":").append(cell.getCol()).append("}");
                 if(it.hasNext()) sb.append(",");
             }
             sb.append("]}");
@@ -320,7 +319,7 @@ public class Board implements Originator {
 
     @Override
     public int hashCode() {
-        return Objects.hash(N, state, blocchi, initializationStatus, notInBlocco);
+        return Objects.hash(N, blocchi, initializationStatus, notInBlocco);
     }
     private boolean equalsCelle(Cell[][] c1, Cell[][] c2) {
         if(c1.length!=c2.length) return false;

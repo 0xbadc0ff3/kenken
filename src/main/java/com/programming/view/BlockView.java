@@ -2,15 +2,13 @@ package com.programming.view;
 
 import com.programming.Utility;
 import com.programming.model.*;
-
-import javax.swing.*;
 import java.util.*;
 
 public class BlockView {//Proxy
     private Block block;
     private boolean selected = false;
     //private JPanel panel;
-    private List<CellView> cellViews;
+    private final List<CellView> cellViews;
     private CellView displayCell = null;
 
     public BlockView(Board board){
@@ -26,8 +24,7 @@ public class BlockView {//Proxy
             cellViews.add(boardView.getCellView(cell));
             boardView.getCellView(cell).addBlock(this);
         }
-        boolean reset = false;
-        if(boardView.getState()==BoardState.PLAYING) reset = true;
+        boolean reset = boardView.getState() == BoardState.PLAYING;
         boardView.edit();
         this.setOperation(block.getOperation());
         this.setVincolo(block.getVincolo());
@@ -38,7 +35,6 @@ public class BlockView {//Proxy
         updateDisplayCell(block.hasConstraints());
     }
     private void updateDisplayCell(boolean forceUpdate){
-        Integer result = block.getVincolo(); Operation operation = block.getOperation();
         if(displayCell!=null) {
             displayCell.removeConstraints();
         }
@@ -56,6 +52,7 @@ public class BlockView {//Proxy
             }
         }
         if(forceUpdate /*|| result > 0 || operation != null*/){
+            assert candidata != null;
             candidata.addConstraints();
         }
         this.displayCell=candidata;
@@ -93,7 +90,7 @@ public class BlockView {//Proxy
     }
     public void removeCell(CellView cellView){
         cellView.removeBlock();
-        cellViews.remove(cellView.getCell());
+        cellViews.remove(cellView);
         for(CellView cw : cellViews){
             cw.updateView(selected);
         }
@@ -133,7 +130,7 @@ public class BlockView {//Proxy
     }
     public String toString(){
         StringBuilder sb = new StringBuilder(100);
-        for(CellView cw : cellViews) sb.append(""+cw.getCell().getRow()+"\n");
+        for(CellView cw : cellViews) sb.append(cw.getCell().getRow()).append("\n");
         return sb.toString();
     }
 }
