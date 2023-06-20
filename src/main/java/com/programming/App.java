@@ -60,6 +60,7 @@ public class App
         JMenu game = new JMenu("Game");
         JMenuItem startGame = new JMenuItem("Start game");
         startGame.setActionCommand("start");
+        startGame.setEnabled(false);
         JMenuItem edit = new JMenuItem("Edit Board");
         edit.setEnabled(false);
         edit.setActionCommand("edit");
@@ -104,6 +105,7 @@ public class App
                         findSolutions.setEnabled(false);
                     }
                     controller.setNewBoard(n);
+                    startGame.setEnabled(true);
                     break;
                 case "open":
                     if(!controller.isSaved())
@@ -132,7 +134,7 @@ public class App
                         JOptionPane.showMessageDialog(null, "File missing or not valid.", "Error", JOptionPane.ERROR_MESSAGE);
                         exception.printStackTrace();
                     }
-                    System.out.println(controller.toJSON());
+                    startGame.setEnabled(true);
                     break;
                 case "save":
                     if(controller.isSaved()) break;
