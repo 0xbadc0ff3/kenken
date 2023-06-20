@@ -20,7 +20,7 @@ public class ConcreteBlock implements Block {
     }
     @Override
     public void setVincolo(int v){
-        if(v>0) this.vincolo=v;
+        if(v>=0) this.vincolo=v;//Il valore zero implica la cancellazione del valore precedente. (reset)
         else throw new IllegalArgumentException("Sono ammessi esclusivamente vincoli strettamente maggiori di zero.");
     }
     @Override

@@ -48,8 +48,6 @@ public class CellView {
     public void addBlock(BlockView block){
         if(this.block!=null) throw new RuntimeException("Cella già inserita in un blocco.");
         this.block=block;
-        //this.setMenu(boardView.createMenu(this));//TODO: REMOVE
-        //updateView();
     }
     public void removeBlock(){
         this.block=null;
@@ -102,8 +100,10 @@ public class CellView {
     public void setValue(int value){
         //Assumo input valido
         this.cell.setValue(value);
-        System.out.println("setValue: "+cell.getValue());
         this.textField.setText(""+value);
+    }
+    public void updateText(){
+        if(cell.getValue()>0) this.textField.setText(""+cell.getValue());
     }
     public Cell getCell(){
         return cell;
@@ -160,18 +160,6 @@ public class CellView {
         }
     }
     public CellState getState() { return state; }
-    /*
-    public void addConstraints(int result){
-        this.result=result;
-        addConstraints(result, this.operation);
-    }
-    public void addConstraints(Operation operation){
-        this.operation = operation;
-        System.out.println(this.result);
-        addConstraints(this.result,operation);
-    }*/
-    //public Operation getOperationConstraint(){ return operation; }
-    //public Integer getResultConstraint(){ return result; }
     public void removeConstraints(){
         if(!hasConstraints) return;
         hasConstraints = false;

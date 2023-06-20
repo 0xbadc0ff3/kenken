@@ -1,6 +1,7 @@
 package com.programming.controller;
 
 import com.programming.Utility;
+import com.programming.memento.Memento;
 import com.programming.model.Board;
 import com.programming.model.BoardState;
 import com.programming.model.Cell;
@@ -11,6 +12,7 @@ import com.programming.view.CellState;
 import com.programming.view.CellView;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -242,6 +244,15 @@ public final class KenkenController {
 
     public boolean startGame(){
         if(boardView.startGame()){
+            LinkedList<Memento> solutions = new LinkedList<>();
+            new BoardView(boardView.getTemplate()).getSolver(1,solutions).risolvi();
+            if(solutions.isEmpty()) {
+                int input = JOptionPane.showConfirmDialog(boardView,"No solution was found for this template.\nDo you wanna play anyways?","Warning!",JOptionPane.YES_NO_OPTION);
+                if(input!=JOptionPane.YES_OPTION){
+                    boardView.edit();
+                    return true;
+                }
+            }
             for(CellView cellView: boardView.getCellViews()) cellView.setMenu(createMenu(cellView));
             return true;
         }
@@ -256,7 +267,55 @@ public final class KenkenController {
         for(CellView cellView: boardView.getCellViews()) cellView.setMenu(createMenu(cellView));
     }
     public void findSolutions(int n){
-        //TODO
+        if(boardView.getState()!=BoardState.PLAYING) {
+            JOptionPane.showMessageDialog(boardView, "Board is not completely setted yet.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JFrame solutionsFrame = new JFrame("Solutions");
+
+        Memento initialSnapshot = boardView.takeSnapshot();
+        SolutionsController solutionsController = new SolutionsController(new BoardView(boardView.getTemplate()), n);
+
+        solutionsFrame.add(solutionsController.getPanel(), BorderLayout.CENTER);
+        JButton previous = new JButton("Previous"), next = new JButton("Next");
+        previous.setEnabled(false); next.setEnabled(solutionsController.hasNextSolution());
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(e.getSource()==previous){
+                    solutionsController.previousSolution();
+                    previous.setEnabled(solutionsController.hasPreviousSolution());
+                    next.setEnabled(solutionsController.hasNextSolution());
+                }else if(e.getSource()==next){
+                    solutionsController.nextSolution();
+                    next.setEnabled(solutionsController.hasNextSolution());
+                    previous.setEnabled(solutionsController.hasPreviousSolution());
+                }else{
+                    System.out.println("Unknown event source: "+e.getSource());
+                }
+            }
+        };
+        next.addActionListener(actionListener); previous.addActionListener(actionListener);
+        JPanel buttonsPanel = new JPanel(new FlowLayout());
+        buttonsPanel.add(previous); buttonsPanel.add(next);
+        buttonsPanel.setVisible(true);
+        solutionsFrame.add(buttonsPanel,BorderLayout.SOUTH);
+        solutionsFrame.setIconImage(Utility.APP_LOGO);
+        solutionsFrame.setSize(Utility.WIDTH,Utility.HEIGHT);
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        solutionsFrame.setLocation(dim.width/2-solutionsFrame.getSize().width/2, dim.height/2-solutionsFrame.getSize().height/2);
+
+        boardView.setVisible(false);
+
+        solutionsFrame.setVisible(true);
+        solutionsFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                boardView.restore(initialSnapshot);
+                boardView.setVisible(true);
+            }
+        });
+
     }
     private static String getFileExtension(File file) {
         String name = file.getName();
@@ -331,19 +390,6 @@ public final class KenkenController {
         if(checking){
             for(BlockView blockView: boardView.getBlocks()){
                 checkBlock(blockView);
-                /*
-                if(blockView.isValid()) {
-                    for(CellView cellView: blockView.getCellViews()) cellView.setState(CellState.VALID);
-                }else {
-                    boolean hasValues = true;
-                    for(CellView cellView: blockView.getCellViews())
-                        if(cellView.getValue()<=0) {
-                            hasValues=false;
-                            break;
-                        }
-                    if(hasValues) for(CellView cellView: blockView.getCellViews()) cellView.setState(CellState.NOT_VALID_BLOCK);
-                }
-                 */
             }
             for(int i=0;i< boardView.getN();i++){
                 List<CellView> row = boardView.getRow(i);

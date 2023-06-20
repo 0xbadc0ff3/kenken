@@ -1,16 +1,17 @@
 package com.programming.view;
 
 import com.programming.Utility;
+import com.programming.controller.KenKenSolver;
+import com.programming.memento.Memento;
+import com.programming.memento.Originator;
 import com.programming.model.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 
-public final class BoardView extends JPanel{//Proxy
+public final class BoardView extends JPanel implements Originator {//Proxy
     private Board board;
     private List<BlockView> blockViews;
     private CellView[][] cellViews;
@@ -40,8 +41,13 @@ public final class BoardView extends JPanel{//Proxy
             for(int j=0;j<board.getN();j++){
                 CellView current = new CellView(board.getCell(i,j));
                 cellViews[i][j]=current;
+                //current.setValue(board.getCell(i,j).getValue());
                 this.add(current.getView());
             }
+        }
+        for(Block b: board.getBlocks()){
+            BlockView blockView = new BlockView(this.board,this, b);
+            blockViews.add(blockView);
         }
     }
     private BoardView(){
@@ -125,8 +131,26 @@ public final class BoardView extends JPanel{//Proxy
         }
         this.updateUI();
     }
-    public static BoardView blankBoard(){
-        return new BoardView();
+    public KenKenSolver getSolver(int n, Collection<Memento> out){
+        Board copy = new Board(board,false);
+        return new KenKenSolver(board,n,out);
+    }
+    @Override
+    public Memento takeSnapshot(){
+        return board.takeSnapshot();
+    }
+
+    @Override
+    public void restore(Memento memento) {
+        board.restore(memento);
+        for(int i=0;i<board.getN();i++)
+            for(int j=0;j<board.getN();j++)
+                cellViews[i][j].updateText();
+    }
+
+    public Board getTemplate(){
+        if(!board.isReadyToPlay()) throw new IllegalStateException("Template is not completely defined yet.");
+        return new Board(board,false);
     }
 
     @Override
@@ -135,5 +159,8 @@ public final class BoardView extends JPanel{//Proxy
         if (o == null || getClass() != o.getClass()) return false;
         BoardView boardView = (BoardView) o;
         return board.equals(boardView.board);
+    }
+    public static BoardView blankBoard(){
+        return new BoardView();
     }
 }

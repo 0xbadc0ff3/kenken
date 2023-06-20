@@ -41,7 +41,7 @@ class KenkenControllerTest {
         assertAll(
                 ()->assertThrows(RuntimeException.class,()->controller.save()),
                 ()->{
-                    controller.openBoard(new File("/Users/alby/IdeaProjects/kenken/template.json"));
+                    controller.openBoard(new File("template.json"));
                     File f = new File("ciao.json");
                     f.deleteOnExit();
                     controller.save(f);

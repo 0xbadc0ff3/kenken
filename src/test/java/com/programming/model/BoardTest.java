@@ -1,11 +1,13 @@
 package com.programming.model;
 
+import com.programming.memento.Memento;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,9 +31,16 @@ class BoardTest {
     }
 
     @Test
-    @Disabled
+    //@Disabled
     @DisplayName("Check if board understands correctly if a configuration is a solution.")
     void checkSolution() {
+        try {
+            Board b = Board.openBoard(new File("template1_solution.json"));
+            assertTrue(b.checkSolution());
+        }catch (Exception e){
+            fail("Test couldn't correctly read the file.");
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -87,4 +96,55 @@ class BoardTest {
 
     }
 
+    @Test
+    @DisplayName("Check if memento pattern is correctly implemented")
+    void memento(){
+        try {
+            board = Board.openBoard(new File("template1_solution.json"));
+            board.startGame();
+            Memento snapshot = board.takeSnapshot();
+            board.editWithFieldReset();
+            board.startGame();
+            Board b = Board.openBoard(new File("template1_solution.json"));
+            board.restore(snapshot);
+            assertAll(
+                    ()->assertEquals(board, b),
+                    ()->{
+                        b.getCell(0,0).setValue( (board.getCell(0,0).getValue()+1)% board.getN() );
+                        assertNotEquals(board, b);
+                    },
+                    ()->{
+                        Board b1 = Board.openBoard(new File("template2.json"));
+                        assertThrows(IllegalStateException.class, ()->board.restore(b1.takeSnapshot()));
+                    }
+            );
+        }catch (IOException e){
+            fail("Test couldn't read template file.");
+        }
+
+    }
+    @Test
+    @DisplayName("Check if constructor by copy works.")
+    void constructorByCopy(){
+        try {
+            board = Board.openBoard(new File("template.json"));
+        } catch (IOException e) {
+            fail("Couldn't open template file.");
+        }
+        board.edit();
+        Board copy = new Board(board,true);
+        assertAll(
+                ()->assertEquals(board, copy),
+                ()->{
+                    copy.getCell(2,3).setValue( (board.getCell(2,3).getValue()+1)% board.getN() );
+                    assertNotEquals(board,copy);
+                },
+                ()->{
+                    copy.removeBlock(copy.getBlocks().get(0));
+                    assertNotEquals(copy.getBlocks().size(),board.getBlocks().size());
+                },
+                ()->assertFalse(board.getCell(0,0)==copy.getCell(0,0)),
+                ()->assertFalse(board.getBlocks()==copy.getBlocks())
+        );
+    }
 }

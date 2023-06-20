@@ -1,0 +1,1 @@
+{"N":3,"state":1,"values":[0,0,0,0,0,0,0,0,0],"blocks":[{"size":3,"result":6,"operation":"ADD","cells":[{"i":0,"j":0},{"i":0,"j":1},{"i":0,"j":2}]},{"size":3,"result":6,"operation":"MUL","cells":[{"i":1,"j":0},{"i":1,"j":1},{"i":1,"j":2}]},{"size":3,"result":6,"operation":"ADD","cells":[{"i":2,"j":0},{"i":2,"j":1},{"i":2,"j":2}]}]}

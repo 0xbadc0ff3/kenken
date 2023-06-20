@@ -21,7 +21,10 @@ public class App
     public static void main( String[] args )
     {
         //Set Dock Icon for macOS
-        Taskbar.getTaskbar().setIconImage(Utility.APP_LOGO);
+        try {
+            Taskbar.getTaskbar().setIconImage(Utility.APP_LOGO);
+        }catch (Exception e){
+        }
         //Set Look & Feel
         try {
             UIManager.setLookAndFeel(
@@ -203,8 +206,14 @@ public class App
                     }
                     break;
                 case "find-solutions":
-                    controller.findSolutions(0);
-                    //TODO
+                    int num=1;
+                    try {
+                        num = Integer.parseInt(JOptionPane.showInputDialog(null,"How many solutions do you want to find?","Find Solutions",JOptionPane.PLAIN_MESSAGE));
+                        if(num<1) break;
+                        controller.findSolutions(num);
+                    }catch(NumberFormatException exception){
+                        JOptionPane.showMessageDialog(null, "Provided value cannot be interpreted as an integer.","Error",JOptionPane.ERROR_MESSAGE);
+                    }
                     break;
                 case "quit":
                     if(!controller.isSaved() && !exitConsent(window)) break;

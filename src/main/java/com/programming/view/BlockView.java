@@ -26,6 +26,12 @@ public class BlockView {//Proxy
             cellViews.add(boardView.getCellView(cell));
             boardView.getCellView(cell).addBlock(this);
         }
+        boolean reset = false;
+        if(boardView.getState()==BoardState.PLAYING) reset = true;
+        boardView.edit();
+        this.setOperation(block.getOperation());
+        this.setVincolo(block.getVincolo());
+        if(reset) boardView.startGame();
         for(CellView cw : cellViews){
             cw.updateView(false);
         }

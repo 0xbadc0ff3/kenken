@@ -1,12 +1,13 @@
 package com.programming.model;
 
 import com.programming.Utility;
+import com.programming.memento.Memento;
+import com.programming.memento.Originator;
 
-import javax.swing.*;
 import java.io.*;
 import java.util.*;
 
-public class Board {
+public class Board implements Originator {
     private final class AttachedBlock implements Block {//DECORATOR
         private Block block;
         public AttachedBlock(Block b){
@@ -136,10 +137,28 @@ public class Board {
             }
         }
     }
+    private static class BoardMemento implements Memento {
+        private int[][] values;
+        private int hash;
+        public BoardMemento(Board b){
+            values = new int[b.N][b.N];
+            for(int i=0;i<values.length;i++)
+                for(int j=0;j<values[0].length;j++)
+                    values[i][j] = b.celle[i][j].getValue();
+            hash = b.hashCode();
+            //L'hash NON tiene conto del valore delle celle! Viene utilizzato per confrontare la struttura interna della board.
+        }
+        private int[][] getValues(){
+            return values;
+        }
+        private int getHash(){
+            return hash;
+        }
+    }
     private final int N;
     private BoardState state;
     private Cell[][] celle;
-    private Collection<AttachedBlock> blocchi;
+    private List<AttachedBlock> blocchi;
     private boolean initializationStatus = false;//indica se ogni cella appartiene ad un blocco. (corrisponde ad notInBlocco.size()==0)
     private Set<Cell> notInBlocco;
 
@@ -157,6 +176,30 @@ public class Board {
                 celle[i][j] = new Cell(i, j);
                 notInBlocco.add(celle[i][j]);
             }
+    }
+    public Board(Board b, boolean copyValues){
+        blocchi = new LinkedList<>();
+        notInBlocco = new HashSet<>();
+        N = b.N;
+        celle = new Cell[N][N];
+        this.state = BoardState.SETTING;
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++) {
+                celle[i][j] = new Cell(i, j);
+                notInBlocco.add(celle[i][j]);
+                if(copyValues) celle[i][j].setValue(b.celle[i][j].getValue());
+            }
+        //for(Cell cell: b.notInBlocco) notInBlocco.add(celle[cell.getRow()][cell.getCol()]);
+        for(AttachedBlock ab : b.blocchi){
+            AttachedBlock block = new AttachedBlock(new ConcreteBlock());
+            blocchi.add(block);
+            for(Cell c: ab) {
+                block.add(celle[c.getRow()][c.getCol()]);
+            }
+            block.setOperation(ab.getOperation()); block.setVincolo(ab.getVincolo());
+        }
+        initializationStatus=notInBlocco.isEmpty();
+        this.state=b.state;
     }
 
     public Block attachBlock(Block block){//PATTERN DECORATOR
@@ -182,8 +225,8 @@ public class Board {
         return true;
     }
 
-    public Collection<Block> getBlocks(){
-        return Collections.unmodifiableCollection(blocchi);
+    public List<Block> getBlocks(){
+        return Collections.unmodifiableList(blocchi);
     }
     public Cell getCell(int i, int j){
         return celle[i][j];
@@ -194,7 +237,7 @@ public class Board {
     public int getN(){
         return N;
     }
-    private boolean isReadyToPlay(){
+    public boolean isReadyToPlay(){
         if(!initializationStatus) return false;
         for(Block block: blocchi){
             if(!block.hasConstraints()) return false;
@@ -224,7 +267,7 @@ public class Board {
         StringBuilder sb = new StringBuilder(200);
         sb.append("{\"N\":"+N+",\"state\":"+(this.state==BoardState.SETTING?0:1));
         if(this.state==BoardState.PLAYING){
-            sb.append(",values:[");
+            sb.append(",\"values\":[");
             for(int i=0; i<N;i++)
                 for(int j=0; j<N; j++){
                     sb.append(celle[i][j].getValue()+",");
@@ -250,23 +293,53 @@ public class Board {
         sb.append("]}");
         return sb.toString();
     }
-    public static Board openBoard(File jsonFile) throws Exception{
-        if(!jsonFile.exists()) throw new FileNotFoundException();
-        BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
-        StringBuilder text = new StringBuilder(200);
-        String line;
-        while((line=reader.readLine()) != null){
-            text.append(line);
-        }
-        reader.close();
-        StringTokenizer stringTokenizer = new StringTokenizer(text.toString(),":\"\t\n{}[], ");
-        text=null;//libero memoria.
+    @Override
+    public Memento takeSnapshot(){
+        if(state!=BoardState.PLAYING) throw new IllegalStateException("Cannot take a snapshot while board is not configurated!");
+        return new BoardMemento(this);
+    }
+    @Override
+    public void restore(Memento memento){
+        if(!(memento instanceof BoardMemento)) throw new IllegalArgumentException("Invalid Board Snapshot.");
+        BoardMemento boardMemento = (BoardMemento) memento;
+        if(boardMemento.getHash()!=this.hashCode()) throw new IllegalArgumentException("Cannot restore from a different configuration.");
+        //Assunzione: L'hash non presenta collisioni.
+        //Controllo "lasco", nel caso in cui si presenti una collisione dell'hash il programma NON cade in errore, ma permette un uso improprio.
+        int[][] values = boardMemento.getValues();
+        for(int i=0;i<N;i++)
+            for(int j=0;j<N;j++)
+                celle[i][j].setValue(values[i][j]);
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Board board = (Board) o;
+        return N == board.N && initializationStatus == board.initializationStatus && state == board.state && equalsCelle(celle, board.celle) && Objects.equals(blocchi, board.blocchi) && notInBlocco.equals(board.notInBlocco);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(N, state, blocchi, initializationStatus, notInBlocco);
+    }
+    private boolean equalsCelle(Cell[][] c1, Cell[][] c2) {
+        if(c1.length!=c2.length) return false;
+        if(c1[0]==null || c2[0]==null || c1[0].length!=c2[0].length) return false;//ridondante, essendo matrici quadrate.
+        for(int i=0;i<c1.length;i++)
+            for(int j=0;j<c1[0].length;j++){
+                if(c1[i][j].getValue()!=c2[i][j].getValue()) return false;
+            }
+        return true;
+    }
+
+    public static Board openBoard(String json) throws IOException{
+        StringTokenizer stringTokenizer = new StringTokenizer(json,":\"\t\n{}[], ");
         String currentToken = stringTokenizer.nextToken().strip();
-        if(!currentToken.equals("N")) throw new Exception("File not valid. Found "+currentToken+" instead of N");
+        if(!currentToken.equals("N")) throw new IOException("Format not valid. Found "+currentToken+" instead of N");
         currentToken = stringTokenizer.nextToken().strip();
         Board opened = new Board(Integer.parseInt(currentToken));
         currentToken = stringTokenizer.nextToken().strip();
-        if(!currentToken.equals("state")) throw new Exception("File not valid.");
+        if(!currentToken.equals("state")) throw new IOException("Format not valid.");
         currentToken = stringTokenizer.nextToken().strip();
         int state = Integer.parseInt(currentToken);
         if(state==0) {
@@ -274,7 +347,7 @@ public class Board {
         }
         else if(state==1) {
             currentToken = stringTokenizer.nextToken().strip();
-            if(!currentToken.equals("values")) throw new Exception("File not valid.");
+            if(!currentToken.equals("values")) throw new IOException("Format not valid.");
             for(int i=0; i<opened.N;i++){
                 for(int j=0; j<opened.N;j++){
                     currentToken = stringTokenizer.nextToken().strip();
@@ -282,25 +355,25 @@ public class Board {
                 }
             }
         }
-        else throw new Exception("Unknown Board state.");
+        else throw new IOException("Unknown Board state.");
         currentToken = stringTokenizer.nextToken().strip();
-        if(!currentToken.equals("blocks")) throw new Exception("File not valid.");
+        if(!currentToken.equals("blocks")) throw new IOException("Format not valid.");
         //currentToken = stringTokenizer.nextToken();
 
         while(stringTokenizer.hasMoreTokens()){
             //Un'iterazione equivale a leggere un blocco.
             Block current = new ConcreteBlock();
             currentToken = stringTokenizer.nextToken().strip();
-            if(!currentToken.equals("size")) throw new Exception("File not valid.");
+            if(!currentToken.equals("size")) throw new IOException("Format not valid.");
             currentToken = stringTokenizer.nextToken().strip();
             int size = Integer.parseInt(currentToken);
             currentToken = stringTokenizer.nextToken().strip();
-            if(!currentToken.equals("result")) throw new Exception("File not valid.");
+            if(!currentToken.equals("result")) throw new IOException("Format not valid.");
             currentToken = stringTokenizer.nextToken().strip();
             int result =Integer.parseInt(currentToken);
             if(result>0)current.setVincolo(result);
             currentToken = stringTokenizer.nextToken().strip();
-            if(!currentToken.equals("operation")) throw new Exception("File not valid.");
+            if(!currentToken.equals("operation")) throw new IOException("Format not valid.");
             currentToken = stringTokenizer.nextToken().strip().toUpperCase();
             switch (currentToken){
                 case "ADD": current.setOperation(Operation.ADD); break;
@@ -308,18 +381,18 @@ public class Board {
                 case "MUL": current.setOperation(Operation.MUL); break;
                 case "DIV": current.setOperation(Operation.DIV); break;
                 case "NULL": break;
-                default: throw new Exception("Operation "+currentToken+" not valid");
+                default: throw new IOException("Operation "+currentToken+" not valid");
             }
             currentToken = stringTokenizer.nextToken().strip();
-            if(!currentToken.equals("cells")) throw new Exception("File not valid.");
+            if(!currentToken.equals("cells")) throw new IOException("Format not valid.");
             for(int a=0;a<size;a++){
                 int i,j;
                 currentToken = stringTokenizer.nextToken().strip();
-                if(!currentToken.equals("i")) throw new Exception("File not valid.");
+                if(!currentToken.equals("i")) throw new IOException("Format not valid.");
                 currentToken = stringTokenizer.nextToken().strip();
                 i=Integer.parseInt(currentToken);
                 currentToken = stringTokenizer.nextToken().strip();
-                if(!currentToken.equals("j")) throw new Exception("File not valid.");
+                if(!currentToken.equals("j")) throw new IOException("Format not valid.");
                 currentToken = stringTokenizer.nextToken().strip();
                 j=Integer.parseInt(currentToken);
                 current.add(opened.getCell(i,j));
@@ -330,30 +403,17 @@ public class Board {
         if(state==1) opened.state=BoardState.PLAYING;
         return opened;
     }
-    public static void main(String... strings){
-        JFrame frame = new JFrame();
 
-        JFileChooser chooser = new JFileChooser();
-        //frame.add(chooser);
-        frame.setVisible(true);
-        //chooser.addActionListener(e -> {
-        //    if(e.)
-        //});
-        chooser.showOpenDialog(frame);
-        File file =chooser.getSelectedFile();
-        try{
-            openBoard(file);
-        }catch (Exception e){
-
+    public static Board openBoard(File jsonFile) throws IOException{
+        if(!jsonFile.exists()) throw new FileNotFoundException();
+        BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
+        StringBuilder text = new StringBuilder(200);
+        String line;
+        while((line=reader.readLine()) != null){
+            text.append(line);
         }
-    }
+        reader.close();
+        return openBoard(text.toString());
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Board board = (Board) o;
-        return N == board.N && initializationStatus == board.initializationStatus && state == board.state && Arrays.deepEquals(celle, board.celle) && Objects.equals(blocchi, board.blocchi) && notInBlocco.equals(board.notInBlocco);
     }
-
 }
