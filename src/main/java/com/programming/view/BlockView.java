@@ -4,10 +4,9 @@ import com.programming.Utility;
 import com.programming.model.*;
 import java.util.*;
 
-public class BlockView {//Proxy
+public class BlockView {
     private Block block;
     private boolean selected = false;
-    //private JPanel panel;
     private final List<CellView> cellViews;
     private CellView displayCell = null;
 

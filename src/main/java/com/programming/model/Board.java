@@ -32,7 +32,6 @@ public class Board implements Originator {
             block.add(cell);
             Board.this.notInBlocco.remove(cell);
             if(Board.this.notInBlocco.isEmpty()) Board.this.initializationStatus =true;
-            //TODO?
         }
         @Override
         public boolean remove(Cell cell){
@@ -43,7 +42,6 @@ public class Board implements Originator {
                 Board.this.initializationStatus=false;
             }
             return status;
-            //TODO?
         }
 
         @Override
@@ -120,7 +118,8 @@ public class Board implements Originator {
             return new BlockIterator();
         }
         private class BlockIterator implements Iterator<Cell>{//Voglio bloccare l'operazione di Remove.
-        private final Iterator<Cell> iterator = block.iterator();
+            //Utilizzo il pattern PROXY
+            private final Iterator<Cell> iterator = block.iterator();
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
@@ -159,7 +158,7 @@ public class Board implements Originator {
     private BoardState state;
     private final Cell[][] celle;
     private final List<AttachedBlock> blocchi;
-    private boolean initializationStatus = false;//indica se ogni cella appartiene ad un blocco. (corrisponde ad notInBlocco.size()==0)
+    private boolean initializationStatus = false;//Indica se ogni cella appartiene ad un blocco. (corrisponde a notInBlocco.size()==0)
     private final Set<Cell> notInBlocco;
 
     public Board(int n){
@@ -218,10 +217,27 @@ public class Board implements Originator {
         }
     }
     public boolean checkSolution(){
-        //TODO CONTROLLARE VALORI CELLE!!!!!
         if(state!=BoardState.PLAYING) return false;
         for(Block b: blocchi)
             if(!b.isValid()) return false;
+        for(int i=0; i<N; i++){
+            int[] bucket = new int[N];
+            for(int j=0;j<N;j++){
+                if(celle[i][j].getValue()>0){
+                    if(bucket[celle[i][j].getValue()-1]>0) return false;
+                    else bucket[celle[i][j].getValue()-1] +=1;
+                }
+            }
+        }
+        for(int j=0; j<N; j++){
+            int[] bucket = new int[N];
+            for(int i=0;i<N;i++){
+                if(celle[i][j].getValue()>0){
+                    if(bucket[celle[i][j].getValue()-1]>0) return false;
+                    else bucket[celle[i][j].getValue()-1] +=1;
+                }
+            }
+        }
         return true;
     }
 

@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 public class SolutionsController{
     private final SolutionView view;
     private final ArrayList<Memento> solutions;
-    //private ListIterator<Memento> listIterator;
     private int current =-1;
     public SolutionsController(BoardView bw, int n){
         bw.clearBoard();
@@ -28,6 +27,7 @@ public class SolutionsController{
             nextSolution();
         }
     }
+    //SIMILE al patter iterator.
     public boolean hasNextSolution(){
         return current<solutions.size()-1;
     }

@@ -11,7 +11,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public final class BoardView extends JPanel implements Originator {//Proxy
+public final class BoardView extends JPanel implements Originator {
     private Board board;
     private List<BlockView> blockViews;
     private CellView[][] cellViews;
@@ -20,7 +20,6 @@ public final class BoardView extends JPanel implements Originator {//Proxy
         super(new GridLayout(n, n));
         if(n>Utility.MAX_BOARD_SIZE) throw new IllegalArgumentException("Dimensione Board non supportata. (Troppo grande)");
         this.board= new Board(n);
-        //this.panel= new JPanel(new GridLayout(board.getN(), board.getN()));
         blockViews = new LinkedList<>();
         cellViews =new CellView[n][n];
         for(int i=0;i<board.getN();i++){

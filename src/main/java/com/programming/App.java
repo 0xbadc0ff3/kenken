@@ -10,8 +10,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 
 
-
-public class App 
+public class App
 {
     private static boolean exitConsent(JFrame parent){
         int chosen = JOptionPane.showConfirmDialog(parent,"Unsaved changes may be lost. Do you want to continue?","Warning",JOptionPane.YES_NO_OPTION);
