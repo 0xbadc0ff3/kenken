@@ -18,7 +18,7 @@ public class Board implements Originator {
             int vincolo = b.getVincolo();
             if(vincolo>0) this.block.setVincolo(vincolo);
             for(Cell c: b)
-                this.add(c);
+                this.add(Board.this.getCell(c.getRow(),c.getCol()));
         }
         @Override
         public void add(Cell cell){
